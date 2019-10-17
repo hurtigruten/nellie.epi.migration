@@ -1,8 +1,9 @@
-import contentful_management
+import contentful_management, random
 import helpers as hs
 import config as cf
 from urllib.parse import urlparse
 from os.path import splitext, basename
+
 
 CMS_API_URL = "https://www.hurtigruten.com/rest/b2b/voyages"
 
@@ -13,6 +14,9 @@ voyages_to_rewrite = [35896, 48549, 48953, 48152, 49082, 48826, 47889,
     47608, 49010, 48797, 48127, 48896, 48395, 36914, 36818, 36957, 36009,
     35950, 50739, 50705, 50671, 50619, 50595, 50526, 58353, 50458, 58330,
     50574, 50548, 50417]
+
+# to allow more efficient multitasking with parallel workers
+random.shuffle(data)
 
 for voyage_from_list in data:
     
@@ -45,18 +49,19 @@ for voyage_from_list in data:
             'destinations': [hs.entryLink(voyage['destinationId'])],
             'fromPort': hs.entryLink(voyage['fromPort']),
             'toPort': hs.entryLink(voyage['toPort']),
-            'usps': [hs.addEntry(
+            'usps': None if needs_rewriting else [hs.addEntry(
                 environment=ctfl_env,
                 id="usp%d-%d" % (voyage['id'], i),
                 content_type_id="usp",
-                fields=hs.fieldLocalizer('en-US', {'text' : "TODO" if needs_rewriting else usp})) for i, usp in enumerate(voyage['sellingPoints'])],
+                fields=hs.fieldLocalizer('en-US', {'text' : usp})) for i, usp in enumerate(voyage['sellingPoints'])],
             'map': hs.addAsset(
                 environment=ctfl_env,
                 asset_link=voyage['largeMap']['highResolutionUri'],
                 id="voyageMap%d" % voyage['id'],
                 title=voyage['largeMap']['alternateText'],
                 file_name=voyage['largeMap']['alternateText'],
-                content_type='image/svg+xml'),
+                content_type='image/svg+xml',
+                check_duplicates=False),
             'media': [hs.addAsset(
                 environment=ctfl_env,
                 asset_link=media_item['highResolutionUri'],
@@ -79,7 +84,7 @@ for voyage_from_list in data:
                         asset_link=media_item['highResolutionUri'],
                         id="itdpic%d-%s-%d" % (voyage['id'], hs.camelize(itinerary_day['day']), i),
                         title=media_item['alternateText'],
-                        file_name='%s.%s' % (splitext(basename(urlparse(media_item['highResolutionUri']).path))),
+                        file_name='%s%s' % (splitext(basename(urlparse(media_item['highResolutionUri']).path))),
                         content_type='image/jpg') for i, media_item in enumerate(itinerary_day['mediaContent'])]
                 })) for i, itinerary_day in enumerate(voyage['itinerary'])]
         })

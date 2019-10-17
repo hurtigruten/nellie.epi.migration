@@ -46,7 +46,7 @@ def deleteContentTypeAndAssociatedContent(environment, content_type_id):
 
 def deleteContentOfType(environment, content_type_id):
     entries = environment.entries().all(query={
-        "sys.contentType": content_type_id
+        "content_type": content_type_id
     })
     for entry in entries:
         deleteEntryIfExists(environment, entry.sys['id'])
@@ -101,14 +101,16 @@ def cleanAssetName(name):
 def addAsset(**kwargs):
     deleteAssetIfExists(kwargs['environment'], kwargs['id'])
 
-    assets = kwargs['environment'].assets().all(query={
-        'fields.title': cleanAssetName(kwargs['title'])
-    })
+    if (not('check_duplicates' in kwargs)
+        or ('check_duplicates' in kwargs and kwargs['check_duplicates'])):
+        assets = kwargs['environment'].assets().all(query={
+            'fields.title': cleanAssetName(kwargs['title'])
+        })
 
-    for asset in assets:
-        if asset.fields()['file']['fileName'] == kwargs['file_name']:
-            print("Linking to existing asset %s" % asset.sys['id'])
-            return assetLink(asset.sys['id'])
+        for asset in assets:
+            if asset.fields()['file']['fileName'] == kwargs['file_name']:
+                print("Linking to existing asset %s" % asset.sys['id'])
+                return assetLink(asset.sys['id'])
 
     asset_attributes = {
         'fields': {
