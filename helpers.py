@@ -1,10 +1,6 @@
 import json, contentful_management
-from urllib.request import Request, urlopen
 from re import split
-
-
 from urllib.request import Request, urlopen
-import json
 
 def readJsonData(url):
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -71,29 +67,20 @@ def deleteAssetIfExists(environment, asset_id):
     except contentful_management.errors.NotFoundError:
         return
 
-def convertToContentfulRichText(markdown_content):
+def convertToContentfulRichText(html_content):
 
-    if markdown_content is None:
+    if html_content is None:
         return None
 
-    return {
-        "data": {},
-        "content": [
-            {
-            "data": {},
-            "content": [
-                {
-                "data": {},
-                "marks": [],
-                "value": markdown_content,
-                "nodeType": "text"
-                }
-            ],
-            "nodeType": "paragraph"
-            }
-        ],
-        "nodeType": "document"
-    }
+    html_content = html_content.replace('\n', '').replace('\r', '')
+
+    req = Request("http://localhost:3000/convert")
+    req.add_header('Content-Type', 'application/json; charset=utf-8')
+    jsondata = json.dumps({'from': 'html', 'to': 'richtext', 'html': html_content})
+    jsondataasbytes = jsondata.encode('utf-8')   # needs to be bytes
+    req.add_header('Content-Length', len(jsondataasbytes))
+    response = urlopen(req, jsondataasbytes).read()
+    return json.loads(response)
 
 def cleanAssetName(name):
     return name.replace('.jpeg', ' ').replace('.jpg', ' ').replace('.png', ' ').replace('_', ' ').replace('-', ' ').replace('.JPG', ' ').replace('.JPEG', ' ').replace('.PNG', ' ').strip()

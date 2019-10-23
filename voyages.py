@@ -16,9 +16,17 @@ voyages_to_rewrite = [35896, 48549, 48953, 48152, 49082, 48826, 47889,
     50574, 50548, 50417]
 
 # to allow more efficient multitasking with parallel workers
-random.shuffle(data)
+#random.shuffle(data)
 
 for voyage_from_list in data:
+
+    # there is an exception case here
+    if voyage_from_list['id'] == 34046:
+        continue
+
+    needs_rewriting = voyage['id'] in voyages_to_rewrite
+    if needs_rewriting:
+        continue
     
     notFound = False
     try:
@@ -31,7 +39,7 @@ for voyage_from_list in data:
         continue
 
     voyage = hs.readJsonData("%s/%s" % (CMS_API_URL, voyage_from_list['id']))
-    needs_rewriting = voyage['id'] in voyages_to_rewrite
+    
 
     hs.addEntry(
         environment=ctfl_env,
