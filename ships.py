@@ -19,13 +19,13 @@ for ship_from_list in data:
         content_type_id="ship",
         fields=hs.fieldLocalizer('en-US',
         {
-            'code': "[TODO rewrite] " + ship['shipId'],
-            'name': ship['heading'],
+            'code': ship['shipId'],
+            'name': "[TODO rewrite] " + ship['heading'],
             'description': hs.convertToContentfulRichText("TODO"),
             'shipInfo': [
                 hs.addEntry(
                     environment=ctfl_env,
-                    id=ship['shipId'] + "constry",
+                    id=ship['shipId'] + "-shipinfo",
                     
                 )
             ],

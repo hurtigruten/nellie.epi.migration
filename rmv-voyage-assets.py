@@ -10,5 +10,7 @@ while True:
     for start_key in start_keys:
         assets = ctfl_env.assets().all(query={"sys.id[match]": start_key})
         for asset in assets:
+            if asset.is_published:
+                asset.unpublish()
             asset.delete()
             print("Asset %s deleted" % asset.sys['id'])

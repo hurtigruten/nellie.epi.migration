@@ -1,4 +1,4 @@
-import json, contentful_management
+import json, contentful_management, requests
 from re import split
 from urllib.request import Request, urlopen
 
@@ -77,7 +77,7 @@ def convertToContentfulRichText(html_content):
     req = Request("http://localhost:3000/convert")
     req.add_header('Content-Type', 'application/json; charset=utf-8')
     jsondata = json.dumps({'from': 'html', 'to': 'richtext', 'html': html_content})
-    jsondataasbytes = jsondata.encode('utf-8')   # needs to be bytes
+    jsondataasbytes = jsondata.encode('utf-8')
     req.add_header('Content-Length', len(jsondataasbytes))
     response = urlopen(req, jsondataasbytes).read()
     return json.loads(response)
@@ -86,18 +86,44 @@ def cleanAssetName(name):
     return name.replace('.jpeg', ' ').replace('.jpg', ' ').replace('.png', ' ').replace('_', ' ').replace('-', ' ').replace('.JPG', ' ').replace('.JPEG', ' ').replace('.PNG', ' ').strip()
 
 def addAsset(**kwargs):
+
+    ## TODO REMOVE THIS BLOCK
+    try:
+        asset = kwargs['environment'].assets().find(kwargs['id'])
+        print("Asset %s already added" % kwargs['id'])
+        return assetLink(kwargs['id'])
+    except contentful_management.errors.NotFoundError:
+        print("Adding %a" % kwargs['id'])
+    ## TODO REMOVE THIS BLOCK
+
     deleteAssetIfExists(kwargs['environment'], kwargs['id'])
 
-    if (not('check_duplicates' in kwargs)
-        or ('check_duplicates' in kwargs and kwargs['check_duplicates'])):
-        assets = kwargs['environment'].assets().all(query={
-            'fields.title': cleanAssetName(kwargs['title'])
-        })
+    image_url = kwargs['asset_link'].split('?')[0]
 
-        for asset in assets:
-            if asset.fields()['file']['fileName'] == kwargs['file_name']:
-                print("Linking to existing asset %s" % asset.sys['id'])
-                return assetLink(asset.sys['id'])
+    resp = requests.get(image_url, stream=True)
+    img_to_add_content_type = resp.headers['Content-type']
+    if 'content-length' in resp.headers:
+        image_size = resp.headers['Content-length']
+    else:
+        image_size = -1
+    resp.close()
+
+    # link to existing asset if duplicate
+    assets = kwargs['environment'].assets().all(query={
+        'fields.file.details.size': image_size
+    })
+    for asset in assets:
+        resp = requests.get(image_url, stream=True)
+        image_bytes = resp.content
+        resp.close()
+
+        resp = requests.get("http:" + asset.fields()['file']['url'], stream=True)
+        ctfl_image_bytes = resp.content
+        resp.close()
+
+        if image_bytes == ctfl_image_bytes:
+            print("Linking to existing asset %s" % asset.sys['id'])
+            return assetLink(asset.sys['id'])
 
     asset_attributes = {
         'fields': {
@@ -107,8 +133,8 @@ def addAsset(**kwargs):
             'file': {
                 'en-US': {
                     'fileName': kwargs['file_name'],
-                    'contentType': kwargs['content_type'],
-                    'upload': kwargs['asset_link']
+                    'upload': image_url,
+                    'contentType': img_to_add_content_type
                 }
             }
         }
