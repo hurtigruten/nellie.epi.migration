@@ -55,13 +55,13 @@ for voyage_from_list in data:
                 fields=hs.fieldLocalizer('en-US', {'text' : usp})) for i, usp in enumerate(voyage['sellingPoints'])],
             'map': hs.addAsset(
                 environment=ctfl_env,
-                asset_link=voyage['largeMap']['highResolutionUri'],
+                asset_uri=voyage['largeMap']['highResolutionUri'],
                 id="voyageMap%d" % voyage['id'],
                 title=voyage['largeMap']['alternateText'],
                 file_name=voyage['largeMap']['alternateText']),
             'media': [hs.addAsset(
                 environment=ctfl_env,
-                asset_link=media_item['highResolutionUri'],
+                asset_uri=media_item['highResolutionUri'],
                 id="voyagePicture%d-%d" % (voyage['id'], i),
                 title=media_item['alternateText'],
                 file_name='%s%s' % (splitext(basename(urlparse(media_item['highResolutionUri']).path)))) for i, media_item in enumerate(voyage['mediaContent'])],
@@ -77,7 +77,7 @@ for voyage_from_list in data:
                     'description': hs.convertToContentfulRichText(itinerary_day['body']),
                     'images': [hs.addAsset(
                         environment=ctfl_env,
-                        asset_link=media_item['highResolutionUri'],
+                        asset_uri=media_item['highResolutionUri'],
                         id="itdpic%d-%s-%d" % (voyage['id'], hs.camelize(itinerary_day['day']), i),
                         title=media_item['alternateText'],
                         file_name='%s%s' % (splitext(basename(urlparse(media_item['highResolutionUri']).path))),) for i, media_item in enumerate(itinerary_day['mediaContent'])]

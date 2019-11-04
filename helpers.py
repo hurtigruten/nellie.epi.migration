@@ -90,33 +90,38 @@ def cleanAssetName(name):
     return name.replace('.jpeg', ' ').replace('.jpg', ' ').replace('.png', ' ').replace('_', ' ').replace('-', ' ').replace('.JPG', ' ').replace('.JPEG', ' ').replace('.PNG', ' ').strip()
 
 def addAsset(**kwargs):
+    '''Add or override asset with given id, then initialize processing
 
-    ## TODO REMOVE THIS BLOCK
-    try:
-        asset = kwargs['environment'].assets().find(kwargs['id'])
-        print("Asset %s already added" % kwargs['id'])
-        return assetLink(kwargs['id'])
-    except contentful_management.errors.NotFoundError:
-        pass
-    ## TODO REMOVE THIS BLOCK
+    environment :
+        Contentful environment
+
+    id :
+        Asset id
+
+    asset_uri :
+        Asset URI
+
+    title :
+        Asset title
+
+    file_name :
+        Asset filename
+        
+    Returns :
+        Link to asset'''
 
     print("Adding %a" % kwargs['id'])
 
+    # if asset with the same id already added, delete it
     deleteAssetIfExists(kwargs['environment'], kwargs['id'])
 
-    image_url = kwargs['asset_link'].split('?')[0]
+    # get asset base URI
+    image_url = kwargs['asset_uri'].split('?')[0]
 
-    resp = requests.get(image_url, stream=True)
-    img_to_add_content_type = resp.headers['Content-type']
-    if 'content-length' in resp.headers:
-        image_size = resp.headers['Content-length']
-    else:
-        image_size = -1
-    resp.close()
-
-    # link to existing asset if duplicate
+    # search for assets with the same exact size and link to existing image if byte content is exactly the same
+    asset_type, asset_size = getAssetTypeAndSize(image_url)
     assets = kwargs['environment'].assets().all(query={
-        'fields.file.details.size': image_size
+        'fields.file.details.size': asset_size
     })
     for asset in assets:
         resp = requests.get(image_url, stream=True)
@@ -140,7 +145,7 @@ def addAsset(**kwargs):
                 'en-US': {
                     'fileName': kwargs['file_name'],
                     'upload': image_url,
-                    'contentType': img_to_add_content_type
+                    'contentType': asset_type
                 }
             }
         }
@@ -152,17 +157,24 @@ def addAsset(**kwargs):
     )
     p = kwargs['environment'].assets().find(kwargs['id'])
 
-    try:
-        p.process()
-        print("Asset %s added" % kwargs['id'])
-    except ConnectionError:
-        # this is due to some weird Contentful error, it happens on voyage ID=34046 on day 1 picture nr 4 (itdpic34046-day1-3)
-        print("Asset %s added, but processing FAILED due to connection error" % kwargs['id'])
+    p.process()
+    print("Asset %s added" % kwargs['id'])
 
     return assetLink(kwargs['id'])
 
+def getAssetTypeAndSize(uri):
+    '''Return asset type and size if possible to read by image URI, otherwise return 0'''
+
+    resp = requests.get(uri, stream=True)
+    img_to_add_content_type = resp.headers['Content-type']
+    if 'content-length' in resp.headers:
+        return (img_to_add_content_type, resp.headers['Content-length'])
+    else:
+        return (img_to_add_content_type, 0)
+    resp.close()
+
 def addEntry(**kwargs):
-    """Add or override entry with given id
+    '''Add or override entry with given id
 
     environment :
         Contentful environment
@@ -177,8 +189,9 @@ def addEntry(**kwargs):
         Entry fields
 
     Returns :
-        Link to entry"""
+        Link to entry'''
 
+    # if entry with the same id already added, delete it
     deleteEntryIfExists(kwargs['environment'], kwargs['id'])
 
     entry_attributes = {
