@@ -20,6 +20,25 @@ def camelize(string):
        if a.isalnum())
     return pascalized[0].lower() + pascalized[1:]
 
+def extractFirstLetters(string):
+    words = string.split()
+    letters = [word[0] for word in words]
+    return "".join(letters)
+
+def addEntryWithCodeIfNotExist(environment, content_type_id, entry_id):
+
+    if isEntryExists(environment, entry_id):
+        return entryLink(entry_id)
+    
+    return addEntry(
+        environment=environment,
+        id=entry_id,
+        content_type_id=content_type_id,
+        fields=fieldLocalizer('en-US', {
+            'code': entry_id
+        })
+    )
+
 def deleteContentTypeAndAssociatedContent(environment, content_type_id):
     '''Unpublish and delete content type and all content of that type'''
 
@@ -67,6 +86,13 @@ def deleteAssetIfExists(environment, asset_id):
         print("Asset %s deleted" % asset_id)
     except contentful_management.errors.NotFoundError:
         return
+
+def isEntryExists(environment, entry_id):
+    try:
+        environment.entries().find(entry_id)
+        return True
+    except contentful_management.errors.NotFoundError:
+        return False
 
 def convertToContentfulRichText(html_content):
     '''Convert HTML content to Contentful Rich text format by using https://bitbucket.org/hurtigruteninternal/html-to-rich-text (need to run locally)'''
