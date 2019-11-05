@@ -3,11 +3,15 @@ from re import split
 from urllib.request import Request, urlopen
 
 def readJsonData(url):
+    '''Read JSON data from URL'''
+    
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
     return json.loads(webpage)
 
 def createContentfulEnvironment(space_id, env_id, cma_key):
+    '''Create Contentful environment given space, environment and Content Management API key'''
+
     ctfl_client = contentful_management.Client(cma_key)
     return ctfl_client.environments(space_id).find(env_id)
 
@@ -16,18 +20,9 @@ def camelize(string):
        if a.isalnum())
     return pascalized[0].lower() + pascalized[1:]
 
-def fieldFactory(name, type_name, required=False, localized=True):
-    return {
-        'disabled': False,
-        'id': camelize(name),
-        'localized': localized,
-        'name': name,
-        'omitted': False,
-        'required': required,
-        'type': type_name,
-    }
-
 def deleteContentTypeAndAssociatedContent(environment, content_type_id):
+    '''Unpublish and delete content type and all content of that type'''
+
     deleteContentOfType(environment, content_type_id)
 
     try:
@@ -38,9 +33,11 @@ def deleteContentTypeAndAssociatedContent(environment, content_type_id):
     if content_type.is_published:
         content_type.unpublish()
     environment.content_types().delete(content_type_id)
-    print("Content type %s deleted" % content_type_id)
+    print("Content type %s and assocated content deleted" % content_type_id)
 
 def deleteContentOfType(environment, content_type_id):
+    '''Delete all content of particular type'''
+
     entries = environment.entries().all(query={
         "content_type": content_type_id
     })
@@ -48,6 +45,8 @@ def deleteContentOfType(environment, content_type_id):
         deleteEntryIfExists(environment, entry.sys['id'])
 
 def deleteEntryIfExists(environment, entry_id):
+    '''Unpublish and delete entry with given id'''
+
     try:
         entry = environment.entries().find(entry_id)
         if entry.is_published:
@@ -58,6 +57,8 @@ def deleteEntryIfExists(environment, entry_id):
         return
 
 def deleteAssetIfExists(environment, asset_id):
+    '''Unpublish and delete asset with given id'''
+
     try:
         asset = environment.assets().find(asset_id)
         if asset.is_published:
@@ -68,6 +69,7 @@ def deleteAssetIfExists(environment, asset_id):
         return
 
 def convertToContentfulRichText(html_content):
+    '''Convert HTML content to Contentful Rich text format by using https://bitbucket.org/hurtigruteninternal/html-to-rich-text (need to run locally)'''
 
     if html_content is None:
         return None
@@ -83,34 +85,43 @@ def convertToContentfulRichText(html_content):
     return json.loads(response)
 
 def cleanAssetName(name):
+    '''Replace image extension with spaces and strip in order to create asset name'''
+
     return name.replace('.jpeg', ' ').replace('.jpg', ' ').replace('.png', ' ').replace('_', ' ').replace('-', ' ').replace('.JPG', ' ').replace('.JPEG', ' ').replace('.PNG', ' ').strip()
 
 def addAsset(**kwargs):
+    '''Add or override asset with given id, then initialize processing
 
-    ## TODO REMOVE THIS BLOCK
-    try:
-        asset = kwargs['environment'].assets().find(kwargs['id'])
-        print("Asset %s already added" % kwargs['id'])
-        return assetLink(kwargs['id'])
-    except contentful_management.errors.NotFoundError:
-        print("Adding %a" % kwargs['id'])
-    ## TODO REMOVE THIS BLOCK
+    environment :
+        Contentful environment
 
+    id :
+        Asset id
+
+    asset_uri :
+        Asset URI
+
+    title :
+        Asset title
+
+    file_name :
+        Asset filename
+        
+    Returns :
+        Link to asset'''
+
+    print("Adding %a" % kwargs['id'])
+
+    # if asset with the same id already added, delete it
     deleteAssetIfExists(kwargs['environment'], kwargs['id'])
 
-    image_url = kwargs['asset_link'].split('?')[0]
+    # get asset base URI
+    image_url = kwargs['asset_uri'].split('?')[0]
 
-    resp = requests.get(image_url, stream=True)
-    img_to_add_content_type = resp.headers['Content-type']
-    if 'content-length' in resp.headers:
-        image_size = resp.headers['Content-length']
-    else:
-        image_size = -1
-    resp.close()
-
-    # link to existing asset if duplicate
+    # search for assets with the same exact size and link to existing image if byte content is exactly the same
+    asset_type, asset_size = getAssetTypeAndSize(image_url)
     assets = kwargs['environment'].assets().all(query={
-        'fields.file.details.size': image_size
+        'fields.file.details.size': asset_size
     })
     for asset in assets:
         resp = requests.get(image_url, stream=True)
@@ -134,7 +145,7 @@ def addAsset(**kwargs):
                 'en-US': {
                     'fileName': kwargs['file_name'],
                     'upload': image_url,
-                    'contentType': img_to_add_content_type
+                    'contentType': asset_type
                 }
             }
         }
@@ -145,12 +156,42 @@ def addAsset(**kwargs):
         asset_attributes
     )
     p = kwargs['environment'].assets().find(kwargs['id'])
+
     p.process()
     print("Asset %s added" % kwargs['id'])
 
     return assetLink(kwargs['id'])
 
+def getAssetTypeAndSize(uri):
+    '''Return asset type and size if possible to read by image URI, otherwise return 0'''
+
+    resp = requests.get(uri, stream=True)
+    img_to_add_content_type = resp.headers['Content-type']
+    if 'content-length' in resp.headers:
+        return (img_to_add_content_type, resp.headers['Content-length'])
+    else:
+        return (img_to_add_content_type, 0)
+    resp.close()
+
 def addEntry(**kwargs):
+    '''Add or override entry with given id
+
+    environment :
+        Contentful environment
+
+    id :
+        Entry id
+
+    content_type_id :
+        Content type id in Contentful
+
+    fields :
+        Entry fields
+
+    Returns :
+        Link to entry'''
+
+    # if entry with the same id already added, delete it
     deleteEntryIfExists(kwargs['environment'], kwargs['id'])
 
     entry_attributes = {
@@ -166,6 +207,8 @@ def addEntry(**kwargs):
     return entryLink(kwargs['id'])
 
 def fieldLocalizer(locale, field_dict):
+    '''Localize field dictionary for a given locale'''
+
     d = {}
     for key, value in field_dict.items():
         d[key] = {
@@ -174,6 +217,7 @@ def fieldLocalizer(locale, field_dict):
     return d
 
 def entryLink(entry_id):
+    '''Return link to entry by given entry id'''
 
     if entry_id is None:
         return None
@@ -187,6 +231,7 @@ def entryLink(entry_id):
     }
 
 def assetLink(asset_id):
+    '''Return link to asset with given asset id'''
 
     if asset_id is None:
         return None
