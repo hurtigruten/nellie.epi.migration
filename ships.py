@@ -36,6 +36,7 @@ for ship in ships:
             file_name='%s%s' % (splitext(basename(urlparse(full_image_url).path))))]
         ship.save()
         ship.publish()
+        print("Ship %s image updated" % ship.name)
 
     # add cabin categories if not added already
     for cabinCategory in ship_data['cabinCategories']:
@@ -130,6 +131,7 @@ for ship in ships:
         ship.cabinCategories = cabin_category_container_links
         ship.save()
         ship.publish()
+        print("Ship %s cabin categories updated" % ship.name)
 
     # add deckplans if not added already
     deck_plan_links = []
@@ -137,14 +139,33 @@ for ship in ships:
     for deck in ship_data['decks']:
         deck_number = int(deck['number'])
         deck_plan_id = "dplan-%s-%d" % (ship.code, deck_number)
-        if hs.isEntryExists(deck_plan_id):
+        if hs.isEntryExists(ctfl_env, deck_plan_id):
             print("Deckplan %s already added, skipping" % deck_plan_id)
-            deck_plan_links.append(hs.entryLink(deck_plan_id))
+            deck_plan_link = hs.entryLink(deck_plan_id)
         else:
             is_deckplans_updated = True
+            deck_plan_link = hs.addEntry(
+                environment=ctfl_env,
+                id=deck_plan_id,
+                content_type_id="deckPlan",
+                fields = hs.fieldLocalizer('en-US',
+                {
+                    "deck": deck_number,
+                    "plan": hs.addAsset(
+                        environment=ctfl_env,
+                        asset_uri=deck['deck']['highResolutionUri'],
+                        id="deckPic-%s-%d" % (ship.code, deck_number),
+                        title=hs.cleanAssetName(deck['deck']['alternateText']),
+                        file_name='%s%s' % (splitext(basename(urlparse(deck['deck']['highResolutionUri']).path)))
+                    )
+                })
+            )
 
-    #if is_deckplans_updated:
-    #    ship.deckPlans = 
+        deck_plan_links.append(deck_plan_link)
 
 
-    print("Ship %s updated" % ship.name)
+    if is_deckplans_updated:
+        ship.deckPlans = deck_plan_links
+        ship.save()
+        ship.publish()
+        print("Ship %s deckplans updated" % ship.name)
