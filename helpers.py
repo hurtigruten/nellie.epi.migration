@@ -94,6 +94,13 @@ def isEntryExists(environment, entry_id):
     except contentful_management.errors.NotFoundError:
         return False
 
+def isAssetExists(environment, asset_id):
+    try:
+        environment.assets().find(asset_id)
+        return True
+    except contentful_management.errors.NotFoundError:
+        return False
+
 def convertToContentfulRichText(html_content):
     '''Convert HTML content to Contentful Rich text format by using https://bitbucket.org/hurtigruteninternal/html-to-rich-text (need to run locally)'''
 
@@ -136,16 +143,32 @@ def addAsset(**kwargs):
     Returns :
         Link to asset'''
 
-    print("Adding %a" % kwargs['id'])
+    id = kwargs['id'].replace("/","")
+
+    print("Adding %a" % id)
 
     # if asset with the same id already added, delete it
-    deleteAssetIfExists(kwargs['environment'], kwargs['id'])
+    deleteAssetIfExists(kwargs['environment'], id)
 
     # get asset base URI
     image_url = kwargs['asset_uri'].split('?')[0]
+    if not image_url.startswith("http") and image_url.startswith("/globalassets"):
+        image_url = "https://www.hurtigruten.com" + image_url
+
 
     # search for assets with the same exact size and link to existing image if byte content is exactly the same
-    asset_type, asset_size = getAssetTypeAndSize(image_url)
+    image_fetch_succ = False
+    while not image_fetch_succ:
+        try:
+            asset_type, asset_size = getAssetTypeAndSize(image_url)
+            image_fetch_succ = True
+        except requests.exceptions.ConnectionError:
+            # sometimes Epi provides corrupt URLs that can be fixed manually
+            if input("Cannot retrieve asset. Would you like to manually override the URL: %s (y/n)" % image_url) == 'y':
+                image_url = input("Image URL:")
+            else:
+                return None
+    
     assets = kwargs['environment'].assets().all(query={
         'fields.file.details.size': asset_size
     })
@@ -177,21 +200,19 @@ def addAsset(**kwargs):
         }
     }
 
-    kwargs['environment'].assets().create(
-        kwargs['id'],
-        asset_attributes
-    )
-    p = kwargs['environment'].assets().find(kwargs['id'])
+    kwargs['environment'].assets().create(id, asset_attributes)
+    p = kwargs['environment'].assets().find(id)
 
     p.process()
-    print("Asset %s added" % kwargs['id'])
+    print("Asset %s added" % id)
 
-    return assetLink(kwargs['id'])
+    return assetLink(id)
 
 def getAssetTypeAndSize(uri):
     '''Return asset type and size if possible to read by image URI, otherwise return 0'''
 
     resp = requests.get(uri, stream=True)
+
     img_to_add_content_type = resp.headers['Content-type']
     if 'content-length' in resp.headers:
         return (img_to_add_content_type, resp.headers['Content-length'])
@@ -217,20 +238,19 @@ def addEntry(**kwargs):
     Returns :
         Link to entry'''
 
+    id = kwargs['id'].replace("/","")
+
     # if entry with the same id already added, delete it
-    deleteEntryIfExists(kwargs['environment'], kwargs['id'])
+    deleteEntryIfExists(kwargs['environment'], id)
 
     entry_attributes = {
         'content_type_id': kwargs['content_type_id'],
         'fields': kwargs['fields']
     }
-    kwargs['environment'].entries().create(
-        kwargs['id'],
-        entry_attributes
-    )
-    kwargs['environment'].entries().find(kwargs['id']).publish()
-    print("Entry %s added" % kwargs['id'])
-    return entryLink(kwargs['id'])
+    kwargs['environment'].entries().create(id, entry_attributes)
+    kwargs['environment'].entries().find(id).publish()
+    print("Entry %s added" % id)
+    return entryLink(id)
 
 def fieldLocalizer(locale, field_dict):
     '''Localize field dictionary for a given locale'''
