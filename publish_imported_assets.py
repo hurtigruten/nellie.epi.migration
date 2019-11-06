@@ -1,3 +1,8 @@
+'''
+This script published all unpublished assets with asset ID
+starting with one of the keywords defined in the keywords array
+'''
+
 import helpers as hs
 import config as cf
 import contentful_management
@@ -5,7 +10,7 @@ import contentful_management
 ctfl_env = hs.createContentfulEnvironment(cf.CTFL_SPACE_ID, cf.CTFL_ENV_ID, cf.CTFL_MGMT_API_KEY)
 
 step = 1000
-keywords = ["voyagePicture", "itdpic", "voyageMap"]
+keywords = ["deckPic-", "shCabGr-", "shCabCatPic-", "voyagePicture", "itdpic", "voyageMap"]
 
 for keyword in keywords:
     items_in_last_iteration = 1

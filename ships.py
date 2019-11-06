@@ -1,3 +1,16 @@
+'''
+
+This script imports updated ships that are added to contentful:
+- imports ship picture from Epi server if the picture is not existing already
+- migrates all cabin class and grade data if not existing already
+- migrates all deck plans if not existing already
+
+Distinction between what is existing and what is not is made by Contentful entry ID.
+To re-import entries and assets from Episerver, first delete the particular ship picture,
+cabin class container or deck plan form Contentful; then run this script
+
+'''
+
 import contentful_management
 import helpers as hs
 import config as cf

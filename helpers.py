@@ -26,6 +26,10 @@ def extractFirstLetters(string):
     return "".join(letters)
 
 def addEntryWithCodeIfNotExist(environment, content_type_id, entry_id):
+    '''
+    If entry with given entry ID doesn't exist,
+    add new one with given content type id and populate field Code with entry id
+    '''
 
     if isEntryExists(environment, entry_id):
         return entryLink(entry_id)
