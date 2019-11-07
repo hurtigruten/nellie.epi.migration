@@ -1,6 +1,8 @@
 import json, contentful_management, requests
 from re import split
 from urllib.request import Request, urlopen
+from urllib.parse import urlparse
+from os.path import splitext, basename
 
 def readJsonData(url):
     '''Read JSON data from URL'''
@@ -140,9 +142,6 @@ def addAsset(**kwargs):
 
     title :
         Asset title
-
-    file_name :
-        Asset filename
         
     Returns :
         Link to asset'''
@@ -156,8 +155,11 @@ def addAsset(**kwargs):
 
     # get asset base URI
     image_url = kwargs['asset_uri'].split('?')[0]
-    if not image_url.startswith("http") and image_url.startswith("/globalassets"):
-        image_url = "https://www.hurtigruten.com" + image_url
+    if not image_url.startswith("http"):
+        if image_url.startswith("/globalassets"):
+            image_url = "https://www.hurtigruten.com" + image_url
+        if image_url.startswith("//www.hurtigruten.com"):
+            image_url = "https:" + image_url
 
 
     # search for assets with the same exact size and link to existing image if byte content is exactly the same
@@ -166,10 +168,10 @@ def addAsset(**kwargs):
         try:
             asset_type, asset_size = getAssetTypeAndSize(image_url)
             image_fetch_succ = True
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.MissingSchema:
             # sometimes Epi provides corrupt URLs that can be fixed manually
-            if input("Cannot retrieve asset. Would you like to manually override the URL: %s (y/n)" % image_url) == 'y':
-                image_url = input("Image URL:")
+            if input("Cannot retrieve asset. Would you like to manually override the URL: %s (y/n) " % image_url) == 'y':
+                image_url = input("Image URL: ")
             else:
                 return None
     
@@ -196,7 +198,7 @@ def addAsset(**kwargs):
             },
             'file': {
                 'en-US': {
-                    'fileName': kwargs['file_name'],
+                    'fileName': '%s%s' % splitext(basename(urlparse(image_url).path)),
                     'upload': image_url,
                     'contentType': asset_type
                 }

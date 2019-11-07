@@ -1,22 +1,27 @@
 '''
 
-This script imports updated ships that are added to contentful:
+This script imports ship data from Epi that are not yet added to Contentful.
+Only ships that are already in Contentful are updated. The script:
 - imports ship picture from Epi server if the picture is not existing already
 - migrates all cabin class and grade data if not existing already
 - migrates all deck plans if not existing already
 
-Distinction between what is existing and what is not is made by Contentful entry ID.
+Distinction between what is existing and what is not is made by Contentful entry ID. 
+Contentful entry ID is the same as entry ID in Epi for imported items.
 To re-import entries and assets from Episerver, first delete the particular ship picture,
-cabin class container or deck plan form Contentful; then run this script
+cabin class container or deck plan form Contentful; then run this script.
+Please note that deleting the link between a ship and associated item
+e.g. cabin class container will not trigger update.
+The class container entry needs to be deleted.
 
 '''
 
 import contentful_management
 import helpers as hs
 import config as cf
+import random
 from urllib.parse import urlparse
 from os.path import splitext, basename
-import random
 
 CMS_API_URL = "http://api.development.hurtigruten.com:80/api/CmsShips"
 
@@ -45,8 +50,7 @@ for ship in ships:
             environment=ctfl_env,
             asset_uri=full_image_url,
             id=image_id,
-            title=ship.name,
-            file_name='%s%s' % (splitext(basename(urlparse(full_image_url).path))))]
+            title=ship.name)]
         ship.save()
         ship.publish()
         print("Ship %s image updated" % ship.name)
@@ -94,8 +98,7 @@ for ship in ships:
                         environment=ctfl_env,
                         asset_uri=media_item['highResolutionUri'],
                         id="shCabCatPic-%s-%s-%d" % (ship.code, hs.extractFirstLetters(cabinCategory['title']), i),
-                        title=media_item['alternateText'],
-                        file_name='%s%s' % (splitext(basename(urlparse(media_item['highResolutionUri']).path)))
+                        title=media_item['alternateText']
                     ) for i, media_item in enumerate(cabinCategory['media'])],
                     'cabinGrades': [
                         hs.addEntry(
@@ -127,8 +130,7 @@ for ship in ships:
                                         environment=ctfl_env,
                                         asset_uri=image_url,
                                         id="shCabGr-%s-%s-%i" % (ship.code, cabinGrade['code'], i),
-                                        title=hs.cleanAssetName(splitext(basename(urlparse(image_url).path))[0]),
-                                        file_name='%s%s' % (splitext(basename(urlparse(image_url).path)))
+                                        title=hs.cleanAssetName(splitext(basename(urlparse(image_url).path))[0])
                                     )
                                     for i, image_url in enumerate(cabinGrade['cabinGradeImages'])]                        
                             })
@@ -168,9 +170,7 @@ for ship in ships:
                         environment=ctfl_env,
                         asset_uri=deck['deck']['highResolutionUri'],
                         id="deckPic-%s-%d" % (ship.code, deck_number),
-                        title=hs.cleanAssetName(deck['deck']['alternateText']),
-                        file_name='%s%s' % (splitext(basename(urlparse(deck['deck']['highResolutionUri']).path)))
-                    )
+                        title=hs.cleanAssetName(deck['deck']['alternateText']))
                 })
             )
 
