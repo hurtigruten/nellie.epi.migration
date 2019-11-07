@@ -1,6 +1,6 @@
 '''
 
-This script import excursions from Episerver to Contentful if they already are not added
+This script imports excursions from Episerver to Contentful if they already are not added
 to Contentful. This is checked by Contentful entry ID. For imported excursions it is the
 same as entry id in Epi. To update excursions they first need to be deleted from Contentful
 and then imported from Episerver by this script.
