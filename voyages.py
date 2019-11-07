@@ -1,3 +1,13 @@
+'''
+
+This script imports voyages from Episerver to Contentful if they already are not added
+to Contentful. This is checked by contentful entry ID. To update voyages they first
+need to be deleted from Contentful and then imported from Episerver by this script.
+When adding voyage, entries and assets that has been previously linked to the old
+imported voyage and thus have the same id are deleted and re-imported.
+
+'''
+
 import contentful_management, random, config
 import helpers as hs
 from urllib.parse import urlparse
@@ -22,12 +32,8 @@ for voyage_from_list in data:
         continue
 
     # if voyage is already added, do not re-import
-    try:
-        ctfl_env.entries().find(voyage_from_list['id'])
+    if hs.isEntryExists(ctfl_env, voyage_from_list['id']):
         print("%s already added, skipping" % voyage_from_list['id'])
-        continue
-    except contentful_management.errors.NotFoundError:
-        pass
 
     # load all fields for the particular voyage by calling GET voyages/{id} 
     voyage = hs.readJsonData("%s/%s" % (CMS_API_URL, voyage_from_list['id']))  
@@ -81,6 +87,7 @@ for voyage_from_list in data:
                         id="itdpic%d-%s-%d" % (voyage['id'], hs.camelize(itinerary_day['day']), i),
                         title=media_item['alternateText'],
                         file_name='%s%s' % (splitext(basename(urlparse(media_item['highResolutionUri']).path))),) for i, media_item in enumerate(itinerary_day['mediaContent'])]
-                })) for i, itinerary_day in enumerate(voyage['itinerary'])]
+                })
+            ) for i, itinerary_day in enumerate(voyage['itinerary'])]
         })
     )
