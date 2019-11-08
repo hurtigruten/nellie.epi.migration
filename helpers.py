@@ -295,3 +295,11 @@ def assetLink(asset_id):
             "id": asset_id,
         }
     }
+
+def intfromStringOrNoneifNone(string):
+    '''Returns int from string if string value is not None; otherwise returns None'''
+    
+    if string:
+        return int(string)
+
+    return None
