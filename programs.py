@@ -36,8 +36,8 @@ for program in data:
             'name': program['heading'],
             'shortDescription': program['intro'],
             'description': hs.convertToContentfulRichText(program['body']),
-            'minNumberOfGuests': hs.intfromStringOrNoneifNone(program['minimumNumberOfGuests']),
-            'maxNumberOfGuests': hs.intfromStringOrNoneifNone(program['maximumNumberOfGuests']),
+            'minNumberOfGuests': program['minimumNumberOfGuests'], # this is not an integer because there are values like "8 (18/19) 4 (19/20)" there
+            'maxNumberOfGuests': program['maximumNumberOfGuests'],
             'usps': [hs.addEntry(
                 environment=ctfl_env,
                 id="usp%d-%d" % (program['id'], i),
