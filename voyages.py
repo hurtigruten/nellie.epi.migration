@@ -1,17 +1,16 @@
 '''
 
 This script imports voyages from Episerver to Contentful if they already are not added
-to Contentful. This is checked by contentful entry ID. To update voyages they first
-need to be deleted from Contentful and then imported from Episerver by this script.
-When adding voyage, entries and assets that has been previously linked to the old
-imported voyage and thus have the same id are deleted and re-imported.
+to Contentful. This is checked by Contentful entry ID. For imported voyages it is the
+same as entry id in Epi. To update voyages they first need to be deleted from Contentful
+and then imported from Episerver by this script. When adding voyage, entries and assets
+that has been previously linked to the old imported voyage and thus have the same id are
+deleted and re-imported.
 
 '''
 
 import contentful_management, random, config
 import helpers as hs
-from urllib.parse import urlparse
-from os.path import splitext, basename
 
 CMS_API_URL = "https://www.hurtigruten.com/rest/b2b/voyages"
 
@@ -34,6 +33,7 @@ for voyage_from_list in data:
     # if voyage is already added, do not re-import
     if hs.isEntryExists(ctfl_env, voyage_from_list['id']):
         print("%s already added, skipping" % voyage_from_list['id'])
+        continue
 
     # load all fields for the particular voyage by calling GET voyages/{id} 
     voyage = hs.readJsonData("%s/%s" % (CMS_API_URL, voyage_from_list['id']))  
@@ -69,8 +69,7 @@ for voyage_from_list in data:
                 environment=ctfl_env,
                 asset_uri=media_item['highResolutionUri'],
                 id="voyagePicture%d-%d" % (voyage['id'], i),
-                title=media_item['alternateText'],
-                file_name='%s%s' % (splitext(basename(urlparse(media_item['highResolutionUri']).path)))) for i, media_item in enumerate(voyage['mediaContent'])],
+                title=media_item['alternateText']) for i, media_item in enumerate(voyage['mediaContent'])],
             'itinerary': [hs.addEntry(
                 environment=ctfl_env,
                 id="itday%d-%d" % (voyage['id'], i),
@@ -85,8 +84,7 @@ for voyage_from_list in data:
                         environment=ctfl_env,
                         asset_uri=media_item['highResolutionUri'],
                         id="itdpic%d-%s-%d" % (voyage['id'], hs.camelize(itinerary_day['day']), i),
-                        title=media_item['alternateText'],
-                        file_name='%s%s' % (splitext(basename(urlparse(media_item['highResolutionUri']).path))),) for i, media_item in enumerate(itinerary_day['mediaContent'])]
+                        title=media_item['alternateText']) for i, media_item in enumerate(itinerary_day['mediaContent'])]
                 })
             ) for i, itinerary_day in enumerate(voyage['itinerary'])]
         })

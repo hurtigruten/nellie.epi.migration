@@ -10,7 +10,7 @@ import contentful_management
 ctfl_env = hs.createContentfulEnvironment(cf.CTFL_SPACE_ID, cf.CTFL_ENV_ID, cf.CTFL_MGMT_API_KEY)
 
 step = 1000
-keywords = ["deckPic-", "shCabGr-", "shCabCatPic-", "voyagePicture", "itdpic", "voyageMap"]
+keywords = ["programPicture", "excp", "deckPic-", "shCabGr-", "shCabCatPic-", "voyagePicture", "itdpic", "voyageMap"]
 
 for keyword in keywords:
     items_in_last_iteration = 1
