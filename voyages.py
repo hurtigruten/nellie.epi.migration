@@ -51,9 +51,9 @@ for voyage_from_list in data:
             'notIncluded': hs.convertToContentfulRichText(voyage['notIncludedInfo']),
             'travelSuggestionCodes': voyage['travelSuggestionCodes'],
             'duration': voyage['durationText'],
-            'destinations': [hs.entryLink(voyage['destinationId'])],
-            'fromPort': hs.entryLink(voyage['fromPort']),
-            'toPort': hs.entryLink(voyage['toPort']),
+            'destinations': [hs.entry_link(voyage['destinationId'])],
+            'fromPort': hs.entry_link(voyage['fromPort']),
+            'toPort': hs.entry_link(voyage['toPort']),
             'usps': [hs.addEntry(
                 environment=ctfl_env,
                 id="usp%d-%d" % (voyage['id'], i),

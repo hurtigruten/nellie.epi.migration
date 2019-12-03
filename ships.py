@@ -83,7 +83,7 @@ for ship in ships:
 
         if hs.isEntryExists(ctfl_env, cabin_container_id):
             print("Cabin container %s already added, skipping" % cabin_container_id)
-            cabin_category_container_link = hs.entryLink(cabin_container_id)
+            cabin_category_container_link = hs.entry_link(cabin_container_id)
 
         else:
             is_links_updated = True
@@ -93,7 +93,7 @@ for ship in ships:
                 content_type_id="cabinCategoryContainer",
                 fields=hs.fieldLocalizer('en-US',
                 {
-                    'category': hs.entryLink(hs.extractFirstLetters(cabinCategory['title'])),
+                    'category': hs.entry_link(hs.extractFirstLetters(cabinCategory['title'])),
                     'media': [hs.addAsset(
                         environment=ctfl_env,
                         asset_uri=media_item['highResolutionUri'],
@@ -156,7 +156,7 @@ for ship in ships:
         deck_plan_id = "dplan-%s-%d" % (ship.code, deck_number)
         if hs.isEntryExists(ctfl_env, deck_plan_id):
             print("Deckplan %s already added, skipping" % deck_plan_id)
-            deck_plan_link = hs.entryLink(deck_plan_id)
+            deck_plan_link = hs.entry_link(deck_plan_id)
         else:
             is_deckplans_updated = True
             deck_plan_link = hs.addEntry(
