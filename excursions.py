@@ -61,7 +61,7 @@ def update_excursion(excursion):
                     environment = contentful_environment,
                     asset_uri = excursion['image']['imageUrl'],
                     id = "excp%s" % excursion['id'],
-                    title = helpers.clean_asset_name(excursion['image']['altText'] or excursion['title']))
+                    title = helpers.clean_asset_name(excursion['image']['altText'] or excursion['title'], excursion['id']))
             ] if excursion['image'] is not None else []
         })
     )

@@ -27,8 +27,7 @@ def create_contentful_environment(space_id, env_id, cma_key):
 
 
 def camelize(string):
-    pascalized = ''.join(a.capitalize() for a in split('([^a-zA-Z0-9])', string)
-                         if a.isalnum())
+    pascalized = ''.join(a.capitalize() for a in split('([^a-zA-Z0-9])', string) if a.isalnum())
     return pascalized[0].lower() + pascalized[1:]
 
 
@@ -43,9 +42,10 @@ def get_entry(environment, entry_id):
         entry = environment.entries().find(entry_id)
         return entry
     except contentful_management.errors.NotFoundError as e:
-        logging.info('Entry not found: %s' % entry_id)
+        logging.error('Entry not found: %s' % entry_id)
         return e
     except Exception as e:
+        logging.error('Exception occurred while finding entry with ID: %s, error: %s ' % (entry_id, e))
         return e
 
 
@@ -104,15 +104,16 @@ def delete_entry_if_exists(environment, entry_id):
 
     try:
         entry = environment.entries().find(entry_id)
-        logging.info("Entry exists: %s" % entry.sys['id'])
+        logging.info("Entry exists: %s" % entry_id)
         if entry.is_published:
             entry.unpublish()
-        environment.entries().delete(entry.sys['id'])
-        logging.info("Entry deleted: %s" % entry.sys['id'])
+        environment.entries().delete(entry_id)
+        logging.info("Entry deleted: %s" % entry_id)
     except contentful_management.errors.NotFoundError:
+        logging.error("Entry not found: %s, can't be deleted" % entry_id)
         return
     except Exception as e:
-        logging.error(e)
+        logging.error('Exception occurred while deleting entry with ID: %s, error: %s ' % (entry_id, e))
         return e
 
 
@@ -127,9 +128,10 @@ def delete_asset_if_exists(environment, asset_id):
         environment.assets().delete(asset_id)
         logging.info('Asset deleted: %s' % asset_id)
     except contentful_management.errors.NotFoundError:
+        logging.error("Asset not found: %s, can't be deleted" % asset_id)
         return
     except Exception as e:
-        logging.error(e)
+        logging.error('Exception occurred while deleting asset with ID: %s, error: %s ' % (asset_id, e))
         return e
 
 
@@ -140,7 +142,7 @@ def is_entry_exists(environment, entry_id):
     except contentful_management.errors.NotFoundError:
         return False
     except Exception as e:
-        logging.error(e)
+        logging.error('Exception occurred while finding entry with ID: %s, error: %s ' % (entry_id, e))
         return e
 
 
@@ -151,7 +153,7 @@ def is_asset_exists(environment, asset_id):
     except contentful_management.errors.NotFoundError:
         return False
     except Exception as e:
-        logging.error(e)
+        logging.error('Exception occurred while finding asset with ID: %s, error: %s ' % (asset_id, e))
         return e
 
 
@@ -175,10 +177,10 @@ def convert_to_contentful_rich_text(html_content):
     return json.loads(response)
 
 
-def clean_asset_name(name):
+def clean_asset_name(name, asset_id):
     """Replace image extension with spaces and strip in order to create asset name"""
 
-    logging.info('Asset name: %s' % name)
+    logging.info('Asset name: %s, ID: %s' % (name, asset_id))
 
     return name \
         .replace('.jpeg', ' ') \
@@ -233,35 +235,35 @@ def add_asset(**kwargs):
             image_fetch_success = True
         except requests.exceptions.MissingSchema:
             # sometimes Epi provides corrupt URLs that can be fixed manually
-            if input(
-                    "Cannot retrieve asset. Would you like to manually override the URL: %s (y/n) " % image_url) == 'y':
+            if input("Cannot retrieve asset. Would you like to manually override the URL: %s (y/n) " % image_url) == 'y':
                 image_url = input("Image URL: ")
             else:
                 return None
         except Exception as e:
-            logging.error(e)
+            logging.error('Exception occurred while fetching image for asset with ID: %s, error: %s ' % (id, e))
             return e
 
-    assets = kwargs['environment'].assets().all(query = {
-        'fields.file.details.size': asset_size
-    })
+    assets = kwargs['environment'].assets().all(query = {'fields.file.details.size': asset_size})
+
     for asset in assets:
         resp = requests.get(image_url, stream = True)
         image_bytes = resp.content
         resp.close()
 
         resp = requests.get("http:" + asset.fields()['file']['url'], stream = True)
-        ctfl_image_bytes = resp.content
+        contentful_image_bytes = resp.content
         resp.close()
 
-        if image_bytes == ctfl_image_bytes:
-            logging.info('Linking to existing asset: %s' % asset.sys['id'])
-            return asset_link(asset.sys['id'])
+        if image_bytes == contentful_image_bytes:
+            logging.info('%s matches size to existing asset: %s' % (id, asset.sys['id']))
+            if is_asset_exists(kwargs['environment'], asset.sys['id']):
+                logging.info('Linking %s to existing asset: %s' % (id, asset.sys['id']))
+                return asset_link(asset.sys['id'])
 
     asset_attributes = {
         'fields': {
             "title": {
-                'en-US': clean_asset_name(kwargs['title'])
+                'en-US': clean_asset_name(kwargs['title'], id)
             },
             'file': {
                 'en-US': {
@@ -273,9 +275,24 @@ def add_asset(**kwargs):
         }
     }
 
-    kwargs['environment'].assets().create(id, asset_attributes)
-    asset = kwargs['environment'].assets().find(id)
-    asset.process()
+    try:
+        kwargs['environment'].assets().create(id, asset_attributes)
+    except Exception as e:
+        logging.error('Exception occurred while creating asset with ID: %s, error: %s' % (id, e))
+        return e
+
+    try:
+        asset = kwargs['environment'].assets().find(id)
+    except Exception as e:
+        logging.error('Exception occurred while finding asset with ID: %s, error: %s' % (id, e))
+        return e
+
+    try:
+        asset.process()
+    except Exception as e:
+        logging.error('Exception occurred while processing asset with ID: %s, error: %s' % (id, e))
+        return e
+
     logging.info('Asset added: %s' % id)
 
     return asset_link(id)
@@ -323,8 +340,19 @@ def add_entry(**kwargs):
         'content_type_id': kwargs['content_type_id'],
         'fields': kwargs['fields']
     }
-    kwargs['environment'].entries().create(id, entry_attributes)
-    kwargs['environment'].entries().find(id).publish()
+
+    try:
+        kwargs['environment'].entries().create(id, entry_attributes)
+    except Exception as e:
+        logging.error('Exception occurred while creating entry with ID: %s, error: %s' % (id, e))
+        return e
+
+    try:
+        kwargs['environment'].entries().find(id).publish()
+    except Exception as e:
+        logging.error('Exception occurred while publishing entry with ID: %s, error: %s' % (id,e))
+        return e
+
     logging.info('Entry added: %s' % id)
     return entry_link(id)
 
