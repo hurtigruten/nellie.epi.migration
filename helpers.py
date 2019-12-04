@@ -38,6 +38,17 @@ def extract_first_letters(string):
     return "".join(letters)
 
 
+def get_entry(environment, entry_id):
+    try:
+        entry = environment.entries().find(entry_id)
+        return entry
+    except contentful_management.errors.NotFoundError as e:
+        logging.info('Entry not found: %s' % entry_id)
+        return e
+    except Exception as e:
+        return e
+
+
 def add_entry_with_code_if_not_exist(environment, content_type_id, entry_id):
     """
     If entry with given entry ID doesn't exist,
@@ -68,7 +79,7 @@ def delete_content_type_and_associated_content(environment, content_type_id):
         return
     except Exception as e:
         logging.error(e)
-        return
+        return e
 
     if content_type.is_published:
         content_type.unpublish()
@@ -102,7 +113,7 @@ def delete_entry_if_exists(environment, entry_id):
         return
     except Exception as e:
         logging.error(e)
-        return
+        return e
 
 
 def delete_asset_if_exists(environment, asset_id):
@@ -119,7 +130,7 @@ def delete_asset_if_exists(environment, asset_id):
         return
     except Exception as e:
         logging.error(e)
-        return
+        return e
 
 
 def is_entry_exists(environment, entry_id):
@@ -130,7 +141,7 @@ def is_entry_exists(environment, entry_id):
         return False
     except Exception as e:
         logging.error(e)
-        return
+        return e
 
 
 def is_asset_exists(environment, asset_id):
@@ -141,7 +152,7 @@ def is_asset_exists(environment, asset_id):
         return False
     except Exception as e:
         logging.error(e)
-        return
+        return e
 
 
 def convert_to_contentful_rich_text(html_content):
@@ -229,7 +240,7 @@ def add_asset(**kwargs):
                 return None
         except Exception as e:
             logging.error(e)
-            return
+            return e
 
     assets = kwargs['environment'].assets().all(query = {
         'fields.file.details.size': asset_size
@@ -263,10 +274,8 @@ def add_asset(**kwargs):
     }
 
     kwargs['environment'].assets().create(id, asset_attributes)
-    p = kwargs['environment'].assets().find(id)
-
-    p.process()
-    p.publish()
+    asset = kwargs['environment'].assets().find(id)
+    asset.process()
     logging.info('Asset added: %s' % id)
 
     return asset_link(id)

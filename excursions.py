@@ -36,8 +36,9 @@ excursions = helpers.read_json_data(CMS_API_URL)
 logging.info('Number of excursions in EPI: %s' % len(excursions))
 
 
-def update_excursion_if_needed(excursion):
+def update_excursion(excursion):
     logging.info('Excursion migration started with ID: %s' % excursion['id'])
+
     helpers.add_entry(
         environment = contentful_environment,
         id = str(excursion['id']),
@@ -69,7 +70,7 @@ def update_excursion_if_needed(excursion):
 
 def main():
     with ThreadPoolExecutor(max_workers = 3) as executor:
-        running_tasks = {executor.submit(update_excursion_if_needed, excursion): excursion for excursion in excursions}
+        running_tasks = {executor.submit(update_excursion, excursion): excursion for excursion in excursions}
         for task in as_completed(running_tasks):
             logging.info('Excursion migration finished with ID: %s' % task.result())
 
