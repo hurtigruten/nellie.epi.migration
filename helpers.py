@@ -216,8 +216,10 @@ def add_asset(**kwargs):
 
     id = kwargs['id'].replace("/", "")
 
-    # if asset with the same id already added, delete it
-    delete_asset_if_exists(kwargs['environment'], id)
+    # check if asset exists
+    if is_asset_exists(kwargs['environment'], id):
+        logging.info('Asset exists, skip asset ID: %s' % id)
+        return asset_link(id)
 
     # get asset base URI
     image_url = kwargs['asset_uri'].split('?')[0]

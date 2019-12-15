@@ -19,9 +19,9 @@ step = 1000
 # excursion
 # keywords = ["excp"]
 # voyage
-# keywords = ["voyagePicture", "itdpic", "voyageMap"]
+keywords = ["voyagePicture", "itdpic", "voyageMap"]
 # ships
-keywords = ["shippic-", "shCabCatPic-", "shCabGr-", "deckPic-"]
+# keywords = ["shippic-", "shCabCatPic-", "shCabGr-", "deckPic-"]
 
 # all
 # keywords = ["programPicture", "excp", "deckPic-", "shCabGr-", "shCabCatPic-", "voyagePicture", "itdpic", "voyageMap", "shippic-"]
