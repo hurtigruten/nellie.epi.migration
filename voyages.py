@@ -17,7 +17,7 @@ from concurrent.futures import as_completed
 
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
-    level = logging.ERROR,
+    level = logging.INFO,
     datefmt = '%Y-%m-%d %H:%M:%S')
 
 CMS_API_URL = "https://www.hurtigruten.com/rest/b2b/voyages"
@@ -105,7 +105,7 @@ def update_voyage(voyage):
 
 
 def main():
-    with ThreadPoolExecutor(max_workers = 3) as executor:
+    with ThreadPoolExecutor(max_workers = 1) as executor:
         running_tasks = {executor.submit(update_voyage, voyage): voyage for voyage in voyages}
         for task in as_completed(running_tasks):
             logging.info('Voyage migration finished with ID: %s' % task.result())

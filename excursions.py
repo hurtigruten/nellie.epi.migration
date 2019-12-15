@@ -14,7 +14,7 @@ from concurrent.futures import as_completed
 
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
-    level = logging.ERROR,
+    level = logging.INFO,
     datefmt = '%Y-%m-%d %H:%M:%S')
 
 CMS_API_URL = 'https://www.hurtigruten.com/rest/excursion/excursions'
@@ -69,7 +69,7 @@ def update_excursion(excursion):
 
 
 def main():
-    with ThreadPoolExecutor(max_workers = 3) as executor:
+    with ThreadPoolExecutor(max_workers = 1) as executor:
         running_tasks = {executor.submit(update_excursion, excursion): excursion for excursion in excursions}
         for task in as_completed(running_tasks):
             logging.info('Excursion migration finished with ID: %s' % task.result())
