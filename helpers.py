@@ -217,9 +217,19 @@ def add_asset(**kwargs):
     id = kwargs['id'].replace("/", "")
 
     # check if asset exists
+
+    # 1. checking if the asset ID is the same
+
     if is_asset_exists(kwargs['environment'], id):
         logging.info('Asset exists, skip asset ID: %s' % id)
+
+        # TODO: check file size as well, if it's different we have to upload it
+        # 2. has the same asset ID -> check the file size as well
+        
         return asset_link(id)
+
+
+    # 3. the image with a different file size might be already in contentful, so we have to reuse that one
 
     # get asset base URI
     image_url = kwargs['asset_uri'].split('?')[0]
