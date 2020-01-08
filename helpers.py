@@ -6,6 +6,7 @@ from re import split
 from urllib.request import Request, urlopen
 from urllib.parse import urlparse
 from os.path import splitext, basename
+from time import time
 
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -191,6 +192,8 @@ def clean_asset_name(name, asset_id):
         .replace('.JPG', ' ') \
         .replace('.JPEG', ' ') \
         .replace('.PNG', ' ') \
+        .replace('.svg', ' ') \
+        .replace('.SVG', ' ') \
         .strip() if name is not None else name
 
 
@@ -214,23 +217,6 @@ def add_asset(**kwargs):
         Link to asset
     """
 
-    id = kwargs['id'].replace("/", "")
-
-    # check if asset exists
-
-    # 1. checking if the asset ID is the same
-
-    if is_asset_exists(kwargs['environment'], id):
-        logging.info('Asset exists, skip asset ID: %s' % id)
-
-        # TODO: check file size as well, if it's different we have to upload it
-        # 2. has the same asset ID -> check the file size as well
-        
-        return asset_link(id)
-
-
-    # 3. the image with a different file size might be already in contentful, so we have to reuse that one
-
     # get asset base URI
     image_url = kwargs['asset_uri'].split('?')[0]
     if not image_url.startswith("http"):
@@ -238,6 +224,41 @@ def add_asset(**kwargs):
             image_url = "https://www.hurtigruten.com" + image_url
         if image_url.startswith("//www.hurtigruten.com"):
             image_url = "https:" + image_url
+
+    id = kwargs['id'].replace("/", "")
+
+    # check if asset exists
+    # 1. checking if the asset ID is the same
+
+    svgAsset = image_url.endswith(".svg")
+
+    if svgAsset:
+        delete_asset_if_exists(kwargs['environment'], id)
+
+    if is_asset_exists(kwargs['environment'], id) and not svgAsset:
+        # logging.info('Asset exists, skip asset ID: %s' % id)
+        logging.info('Asset exists ID: %s, checking file size' % id)
+
+        # TODO: check file size as well, if it's different we have to upload it
+        resp = requests.get(image_url, stream = True)
+        image_bytes = resp.headers['Content-length']
+        resp.close()
+        logging.info('Epi image size: %s' % image_bytes)
+        
+        resp = requests.get("http:" + kwargs['environment'].assets().find(id).fields()['file']['url'], stream = True)
+        contentful_image_bytes = resp.headers['Content-length']
+        resp.close()
+        logging.info('Contentful image size: %s' %contentful_image_bytes)
+
+        # 2. has the same asset ID -> check the file size as well
+        if image_bytes == contentful_image_bytes:
+            logging.info('Asset id and size are the same')
+            return asset_link(id)
+        else:
+            logging.info('Asset size is different')
+            id = id + str(time())
+
+    # 3. the image with a different file size might be already in contentful, so we have to reuse that one
 
     # search for assets with the same exact size and link to existing image if byte content is exactly the same
     image_fetch_success = False
@@ -271,11 +292,12 @@ def add_asset(**kwargs):
             if is_asset_exists(kwargs['environment'], asset.sys['id']):
                 logging.info('Linking %s to existing asset: %s' % (id, asset.sys['id']))
                 return asset_link(asset.sys['id'])
-
+    
+    name = '%s%s' % splitext(basename(urlparse(image_url).path))
     asset_attributes = {
         'fields': {
             "title": {
-                'en-US': clean_asset_name(kwargs['title'], id)
+                'en-US': clean_asset_name(name, id)
             },
             'file': {
                 'en-US': {
@@ -345,6 +367,14 @@ def add_entry(**kwargs):
 
     id = kwargs['id'].replace("/", "")
 
+    # old_entry = kwargs['environment'].entries().find(id)
+
+    # if old_entry:
+    #     logging.info('Comparing entries with id: %s' % id)
+    #     if compare_entry(kwargs['fields'], old_entry._fields):
+    #         logging.info('Entries are the same')
+    #         return entry_link(id)
+
     # if entry with the same id already added, delete it
     delete_entry_if_exists(kwargs['environment'], id)
 
@@ -408,3 +438,20 @@ def asset_link(asset_id):
             "id": asset_id,
         }
     }
+
+# def compare_entry(new_fields, old_fields):
+#     """Compares the old and new fields in contentful"""
+
+#     result = True
+#     for key in old_fields:
+#         newKeys = key.split('_')
+#         newKey = '%s%s' % (newKeys[0], newKeys[1].title())
+#         if new_fields[newKey]["en-US"] is None:
+#             continue
+#         if isinstance(new_fields[newKey]["en-US"], dict):
+#             if "nodeType" in new_fields[newKey]["en-US"]:
+#                 continue
+#         if new_fields[newKey]["en-US"] != old_fields['en-US'][key]:
+#             result = False
+    
+#     return result

@@ -39,7 +39,12 @@ logging.info('Get all ships from Contentful')
 contentful_ships = contentful_environment.entries().all(query = {"content_type": "ship"})
 logging.info('Number of ships in Contentful: %s' % len(contentful_ships))
 
+shipsToMerge = ["MS Roald Amundsen"]
+
 for ship in contentful_ships:
+
+    # if not ship.name in shipsToMerge:
+    #     continue
 
     logging.info("Migrating data for ship %s" % ship.name)
     ship_data = helpers.read_json_data("%s/%s" % ("https://www.hurtigruten.com/rest/b2b/ships", ship.code))
@@ -69,7 +74,7 @@ for ship in contentful_ships:
 
     # add cabin categories
     for cabinCategory in ship_data['cabinCategories']:
-        cabinCategoryCode = helpers.extract_first_letters(cabinCategory['title'])
+        cabinCategoryCode = "%s-%s" % (ship.code, helpers.extract_first_letters(cabinCategory['title']))
         helpers.add_entry(
             environment = contentful_environment,
             id = cabinCategoryCode,
@@ -88,13 +93,15 @@ for ship in contentful_ships:
         cabin_container_id = "cabcatcont-%s-%s" % (ship.code, helpers.extract_first_letters(cabinCategory['title']))
         cabin_category_container_link = {}
 
+        cabCatId = "%s-%s" % (ship.code, helpers.extract_first_letters(cabinCategory['title']))
+
         is_links_updated = True
         cabin_category_container_link = helpers.add_entry(
             environment = contentful_environment,
             id = "cabcatcont-%s-%s" % (ship.code, helpers.extract_first_letters(cabinCategory['title'])),
             content_type_id = "cabinCategoryContainer",
             fields = helpers.field_localizer('en-US', {
-                'category': helpers.entry_link(helpers.extract_first_letters(cabinCategory['title'])),
+                'category': helpers.entry_link(cabCatId),
                 'media': [helpers.add_asset(
                     environment = contentful_environment,
                     asset_uri = media_item['highResolutionUri'],
@@ -202,3 +209,4 @@ for ship in contentful_ships:
             logging.info('Ship %s deck plans updated' % ship.name)
         except Exception as e:
             logging.error('Could not publish ship deck plans with name: %s, error: %s' % (ship.name, e))
+    
