@@ -239,10 +239,8 @@ def add_asset(**kwargs):
         # logging.info('Asset exists, skip asset ID: %s' % id)
         logging.info('Asset exists ID: %s, checking file size' % id)
 
-        # TODO: check file size as well, if it's different we have to upload it
-        resp = requests.get(image_url, stream = True)
-        image_bytes = resp.headers['Content-length']
-        resp.close()
+        image_bytes = get_asset_size(image_url)
+
         logging.info('Epi image size: %s' % image_bytes)
         
         resp = requests.get("http:" + kwargs['environment'].assets().find(id).fields()['file']['url'], stream = True)
@@ -331,6 +329,17 @@ def add_asset(**kwargs):
 
     return asset_link(id)
 
+def get_asset_size(uri):
+    """Return asset size if possible to read by image URI, otherwise return 0"""
+
+    resp = requests.get(uri, stream = True)
+
+    img_to_add_content_type = resp.headers['Content-type']
+    if 'content-length' in resp.headers:
+        return resp.headers['Content-length']
+    else:
+        return 0
+    resp.close()
 
 def get_asset_type_and_size(uri):
     """Return asset type and size if possible to read by image URI, otherwise return 0"""

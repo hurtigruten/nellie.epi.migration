@@ -35,9 +35,13 @@ logging.info('Get all excursions')
 excursions = helpers.read_json_data(CMS_API_URL)
 logging.info('Number of excursions in EPI: %s' % len(excursions))
 
+# exc = [61503,58199,57773,57772,58309,61507,58310,61510,45317,61514,59718,61517,61522,58314,58315,61525,45334,61528,58316,45336,61537,45338,61546,58317,61500]
 
 def update_excursion(excursion):
     logging.info('Excursion migration started with ID: %s' % excursion['id'])
+
+    # if excursion['id'] not in exc:
+    #     return
 
     helpers.add_entry(
         environment = contentful_environment,

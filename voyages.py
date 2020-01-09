@@ -33,9 +33,13 @@ voyages = helpers.read_json_data(CMS_API_URL)
 logging.info('Number of voyages in EPI: %s' % len(voyages))
 
 
+# pVoyages = [50526,49665,50189,50417,50548,50705,50727,50739,51069,51081,40019,49628]
+
 def update_voyage(voyage):
     logging.info('Voyage migration started with ID: %s' % voyage['id'])
 
+    # if voyage['id'] not in pVoyages:
+    #     return
     # load all fields for the particular voyage by calling GET voyages/{id}
     voyage_detail = helpers.read_json_data("%s/%s" % (CMS_API_URL, voyage['id']))
 

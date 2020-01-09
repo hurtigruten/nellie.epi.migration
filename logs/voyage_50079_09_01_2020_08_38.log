@@ -1,0 +1,566 @@
+2020-01-09 08:31:48 INFO     Setup Contentful environment
+2020-01-09 08:31:49 INFO     Get all voyages
+2020-01-09 08:31:50 INFO     Number of voyages in EPI: 142
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 20940
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 20941
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 20942
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 20943
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 20950
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 20987
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 24540
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 25007
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 25990
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 26028
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 26150
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 26167
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 26307
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 26393
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 26482
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 26495
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 26505
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 28078
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 28265
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:50 INFO     Voyage migration started with ID: 28270
+2020-01-09 08:31:50 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 28275
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 28280
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 28721
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 34046
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 34464
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 35896
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 35950
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 36009
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 36042
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 36328
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 36762
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 36818
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 36845
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 36877
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 36914
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 36957
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 36978
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 37009
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 37048
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 37098
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 37204
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 37225
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 37245
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 37287
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 37341
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 37421
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 37590
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 37617
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 38695
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 38842
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 38953
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39123
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39255
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39331
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39365
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39480
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39533
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39547
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39567
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39616
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39656
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39788
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39933
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 39995
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 40019
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 40067
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 40085
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 40106
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 40142
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 40194
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 40220
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 40667
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 44053
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 44253
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 46019
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 47608
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 47889
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 48127
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 48152
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 48395
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 48549
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 48797
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 48826
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 48896
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 48953
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49010
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49082
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49135
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49268
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49321
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49345
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49429
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49521
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49628
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49665
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49907
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 49915
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration started with ID: 50079
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:31:51 INFO     Voyage migration finished with ID: None
+2020-01-09 08:32:03 INFO     Entry exists: usp50079-0
+2020-01-09 08:32:04 INFO     Entry deleted: usp50079-0
+2020-01-09 08:32:06 INFO     Entry added: usp50079-0
+2020-01-09 08:32:06 INFO     Entry exists: usp50079-1
+2020-01-09 08:32:07 INFO     Entry deleted: usp50079-1
+2020-01-09 08:32:09 INFO     Entry added: usp50079-1
+2020-01-09 08:32:09 INFO     Entry exists: usp50079-2
+2020-01-09 08:32:10 INFO     Entry deleted: usp50079-2
+2020-01-09 08:32:12 INFO     Entry added: usp50079-2
+2020-01-09 08:32:12 INFO     Entry exists: usp50079-3
+2020-01-09 08:32:13 INFO     Entry deleted: usp50079-3
+2020-01-09 08:32:15 INFO     Entry added: usp50079-3
+2020-01-09 08:32:15 INFO     Asset exists ID: voyageMap50079, checking file size
+2020-01-09 08:32:15 INFO     Epi image size: 145038
+2020-01-09 08:32:16 INFO     Contentful image size: 223680
+2020-01-09 08:32:16 INFO     Asset size is different
+2020-01-09 08:32:16 INFO     Asset name: new-fnnor2001_6_desktop710x625_uk.png, ID: voyageMap500791578555136.4323647
+2020-01-09 08:32:18 INFO     Asset added: voyageMap500791578555136.4323647
+2020-01-09 08:32:18 INFO     Asset exists ID: voyagePicture50079-0, checking file size
+2020-01-09 08:32:19 INFO     Epi image size: 373621
+2020-01-09 08:32:19 INFO     Contentful image size: 373621
+2020-01-09 08:32:19 INFO     Asset id and size are the same
+2020-01-09 08:32:19 INFO     Asset exists ID: voyagePicture50079-1, checking file size
+2020-01-09 08:32:20 INFO     Epi image size: 436694
+2020-01-09 08:32:21 INFO     Contentful image size: 452811
+2020-01-09 08:32:21 INFO     Asset size is different
+2020-01-09 08:32:22 INFO     voyagePicture50079-11578555141.2053635 matches size to existing asset: voyagePicture50189-01578514173.9285069
+2020-01-09 08:32:23 INFO     Linking voyagePicture50079-11578555141.2053635 to existing asset: voyagePicture50189-01578514173.9285069
+2020-01-09 08:32:24 INFO     Asset exists ID: voyagePicture50079-2, checking file size
+2020-01-09 08:32:24 INFO     Epi image size: 167975
+2020-01-09 08:32:25 INFO     Contentful image size: 227710
+2020-01-09 08:32:25 INFO     Asset size is different
+2020-01-09 08:32:26 INFO     Asset name: bryggen_bergenlars-korvald_2500x1250.jpg, ID: voyagePicture50079-21578555145.7872717
+2020-01-09 08:32:27 INFO     Asset added: voyagePicture50079-21578555145.7872717
+2020-01-09 08:32:27 INFO     Asset exists ID: voyagePicture50079-3, checking file size
+2020-01-09 08:32:28 INFO     Epi image size: 71883
+2020-01-09 08:32:29 INFO     Contentful image size: 95357
+2020-01-09 08:32:29 INFO     Asset size is different
+2020-01-09 08:32:29 INFO     Asset name: seeadlersafarihans-neumayer__2500x1250.jpg, ID: voyagePicture50079-31578555149.0224755
+2020-01-09 08:32:30 INFO     Asset added: voyagePicture50079-31578555149.0224755
+2020-01-09 08:32:31 INFO     Asset exists ID: voyagePicture50079-4, checking file size
+2020-01-09 08:32:32 INFO     Epi image size: 236372
+2020-01-09 08:32:33 INFO     Contentful image size: 273092
+2020-01-09 08:32:33 INFO     Asset size is different
+2020-01-09 08:32:34 INFO     Asset name: svolvaersimon-vogele__2500x1250.jpg, ID: voyagePicture50079-41578555153.824131
+2020-01-09 08:32:35 INFO     Asset added: voyagePicture50079-41578555153.824131
+2020-01-09 08:32:37 INFO     itdpic50079-day1-0 matches size to existing asset: itdpic51143-day1415-0
+2020-01-09 08:32:37 INFO     Linking itdpic50079-day1-0 to existing asset: itdpic51143-day1415-0
+2020-01-09 08:32:37 INFO     Asset exists ID: itdpic50079-day1-1, checking file size
+2020-01-09 08:32:37 INFO     Epi image size: 98427
+2020-01-09 08:32:38 INFO     Contentful image size: 98427
+2020-01-09 08:32:38 INFO     Asset id and size are the same
+2020-01-09 08:32:39 INFO     Entry exists: itday50079-0
+2020-01-09 08:32:41 INFO     Entry deleted: itday50079-0
+2020-01-09 08:32:45 INFO     Entry added: itday50079-0
+2020-01-09 08:32:45 INFO     Asset exists ID: itdpic50079-day2-0, checking file size
+2020-01-09 08:32:46 INFO     Epi image size: 79668
+2020-01-09 08:32:47 INFO     Contentful image size: 79668
+2020-01-09 08:32:47 INFO     Asset id and size are the same
+2020-01-09 08:32:48 INFO     Entry exists: itday50079-1
+2020-01-09 08:32:50 INFO     Entry deleted: itday50079-1
+2020-01-09 08:32:54 INFO     Entry added: itday50079-1
+2020-01-09 08:32:55 INFO     Asset exists ID: itdpic50079-day3-0, checking file size
+2020-01-09 08:32:56 INFO     Epi image size: 101462
+2020-01-09 08:32:57 INFO     Contentful image size: 128779
+2020-01-09 08:32:57 INFO     Asset size is different
+2020-01-09 08:32:59 INFO     itdpic50079-day3-01578555177.7727106 matches size to existing asset: itdpic50189-day1-0
+2020-01-09 08:33:00 INFO     Linking itdpic50079-day3-01578555177.7727106 to existing asset: itdpic50189-day1-0
+2020-01-09 08:33:01 INFO     Asset exists ID: itdpic50079-day3-1, checking file size
+2020-01-09 08:33:01 INFO     Epi image size: 93482
+2020-01-09 08:33:02 INFO     Contentful image size: 124095
+2020-01-09 08:33:02 INFO     Asset size is different
+2020-01-09 08:33:03 INFO     itdpic50079-day3-11578555182.2754998 matches size to existing asset: itdpic50189-day1-1
+2020-01-09 08:33:03 INFO     Linking itdpic50079-day3-11578555182.2754998 to existing asset: itdpic50189-day1-1
+2020-01-09 08:33:04 INFO     Asset exists ID: itdpic50079-day3-2, checking file size
+2020-01-09 08:33:05 INFO     Epi image size: 262927
+2020-01-09 08:33:06 INFO     Contentful image size: 267677
+2020-01-09 08:33:06 INFO     Asset size is different
+2020-01-09 08:33:08 INFO     itdpic50079-day3-21578555186.82063 matches size to existing asset: itdpic50189-day1-2
+2020-01-09 08:33:10 INFO     Linking itdpic50079-day3-21578555186.82063 to existing asset: itdpic50189-day1-2
+2020-01-09 08:33:10 INFO     Entry exists: itday50079-2
+2020-01-09 08:33:12 INFO     Entry deleted: itday50079-2
+2020-01-09 08:33:14 INFO     Entry added: itday50079-2
+2020-01-09 08:33:15 INFO     Asset exists ID: itdpic50079-day4-0, checking file size
+2020-01-09 08:33:15 INFO     Epi image size: 94192
+2020-01-09 08:33:16 INFO     Contentful image size: 96786
+2020-01-09 08:33:16 INFO     Asset size is different
+2020-01-09 08:33:16 INFO     Asset name: geirangerkastner-reinhard_1200x600.jpg, ID: itdpic50079-day4-01578555196.285704
+2020-01-09 08:33:18 INFO     Asset added: itdpic50079-day4-01578555196.285704
+2020-01-09 08:33:19 INFO     Asset exists ID: itdpic50079-day4-1, checking file size
+2020-01-09 08:33:19 INFO     Epi image size: 82916
+2020-01-09 08:33:20 INFO     Contentful image size: 112214
+2020-01-09 08:33:20 INFO     Asset size is different
+2020-01-09 08:33:21 INFO     Asset name: alesund-shutterstock_1200x600.jpg, ID: itdpic50079-day4-11578555200.9940274
+2020-01-09 08:33:23 INFO     Asset added: itdpic50079-day4-11578555200.9940274
+2020-01-09 08:33:24 INFO     Asset exists ID: itdpic50079-day4-2, checking file size
+2020-01-09 08:33:24 INFO     Epi image size: 160444
+2020-01-09 08:33:26 INFO     Contentful image size: 205231
+2020-01-09 08:33:26 INFO     Asset size is different
+2020-01-09 08:33:26 INFO     Asset name: alesundhelmut-hartung_1200x600.jpg, ID: itdpic50079-day4-21578555206.2540464
+2020-01-09 08:33:28 INFO     Asset added: itdpic50079-day4-21578555206.2540464
+2020-01-09 08:33:28 INFO     Entry exists: itday50079-3
+2020-01-09 08:33:30 INFO     Entry deleted: itday50079-3
+2020-01-09 08:33:32 INFO     Entry added: itday50079-3
+2020-01-09 08:33:32 INFO     Asset exists ID: itdpic50079-day5-0, checking file size
+2020-01-09 08:33:33 INFO     Epi image size: 113637
+2020-01-09 08:33:34 INFO     Contentful image size: 142196
+2020-01-09 08:33:34 INFO     Asset size is different
+2020-01-09 08:33:34 INFO     Asset name: trondheim_stein-j-bjorge_1200x600.jpg, ID: itdpic50079-day5-01578555214.010751
+2020-01-09 08:33:35 INFO     Asset added: itdpic50079-day5-01578555214.010751
+2020-01-09 08:33:37 INFO     Asset exists ID: itdpic50079-day5-1, checking file size
+2020-01-09 08:33:37 INFO     Epi image size: 65254
+2020-01-09 08:33:38 INFO     Contentful image size: 89216
+2020-01-09 08:33:38 INFO     Asset size is different
+2020-01-09 08:33:39 INFO     Asset name: kjeungskjarmatthias-frey_1200x600.jpg, ID: itdpic50079-day5-11578555218.81907
+2020-01-09 08:33:41 INFO     Asset added: itdpic50079-day5-11578555218.81907
+2020-01-09 08:33:41 INFO     Asset exists ID: itdpic50079-day5-2, checking file size
+2020-01-09 08:33:41 INFO     Epi image size: 169004
+2020-01-09 08:33:42 INFO     Contentful image size: 170808
+2020-01-09 08:33:42 INFO     Asset size is different
+2020-01-09 08:33:42 INFO     Asset name: trondheim-stein-j-bjorge_1200x600.jpg, ID: itdpic50079-day5-21578555222.3933432
+2020-01-09 08:33:44 INFO     Asset added: itdpic50079-day5-21578555222.3933432
+2020-01-09 08:33:44 INFO     Entry exists: itday50079-4
+2020-01-09 08:33:46 INFO     Entry deleted: itday50079-4
+2020-01-09 08:33:48 INFO     Entry added: itday50079-4
+2020-01-09 08:33:48 INFO     Asset exists ID: itdpic50079-day6-0, checking file size
+2020-01-09 08:33:49 INFO     Epi image size: 184126
+2020-01-09 08:33:49 INFO     Contentful image size: 207981
+2020-01-09 08:33:49 INFO     Asset size is different
+2020-01-09 08:33:50 INFO     Asset name: saltstraumen2_eirik-nicolai-heim_1200x600.jpg, ID: itdpic50079-day6-01578555229.9366329
+2020-01-09 08:33:51 INFO     Asset added: itdpic50079-day6-01578555229.9366329
+2020-01-09 08:33:52 INFO     Asset exists ID: itdpic50079-day6-1, checking file size
+2020-01-09 08:33:53 INFO     Epi image size: 89646
+2020-01-09 08:33:54 INFO     Contentful image size: 110565
+2020-01-09 08:33:54 INFO     Asset size is different
+2020-01-09 08:33:55 INFO     Asset name: svolvaersimon-vogele_1200x600.jpg, ID: itdpic50079-day6-11578555234.8952615
+2020-01-09 08:33:56 INFO     Asset added: itdpic50079-day6-11578555234.8952615
+2020-01-09 08:33:57 INFO     Asset exists ID: itdpic50079-day6-2, checking file size
+2020-01-09 08:33:57 INFO     Epi image size: 48635
+2020-01-09 08:33:58 INFO     Contentful image size: 54564
+2020-01-09 08:33:58 INFO     Asset size is different
+2020-01-09 08:33:58 INFO     Asset name: seeadlersafarihans-neumayer_1200x600.jpg, ID: itdpic50079-day6-21578555238.2678394
+2020-01-09 08:34:00 INFO     Asset added: itdpic50079-day6-21578555238.2678394
+2020-01-09 08:34:00 INFO     Entry exists: itday50079-5
+2020-01-09 08:34:02 INFO     Entry deleted: itday50079-5
+2020-01-09 08:34:04 INFO     Entry added: itday50079-5
+2020-01-09 08:34:05 INFO     Asset exists ID: itdpic50079-day7-0, checking file size
+2020-01-09 08:34:05 INFO     Epi image size: 135817
+2020-01-09 08:34:07 INFO     Contentful image size: 163423
+2020-01-09 08:34:07 INFO     Asset size is different
+2020-01-09 08:34:08 INFO     Asset name: tromso_-shutterstock-.jpg, ID: itdpic50079-day7-01578555247.4729388
+2020-01-09 08:34:09 INFO     Asset added: itdpic50079-day7-01578555247.4729388
+2020-01-09 08:34:10 INFO     Asset exists ID: itdpic50079-day7-1, checking file size
+2020-01-09 08:34:10 INFO     Epi image size: 71683
+2020-01-09 08:34:12 INFO     Contentful image size: 87996
+2020-01-09 08:34:12 INFO     Asset size is different
+2020-01-09 08:34:13 INFO     Asset name: tromso_shutterstock.jpg, ID: itdpic50079-day7-11578555252.4992433
+2020-01-09 08:34:14 INFO     Asset added: itdpic50079-day7-11578555252.4992433
+2020-01-09 08:34:14 INFO     Asset exists ID: itdpic50079-day7-2, checking file size
+2020-01-09 08:34:15 INFO     Epi image size: 97042
+2020-01-09 08:34:15 INFO     Contentful image size: 123821
+2020-01-09 08:34:15 INFO     Asset size is different
+2020-01-09 08:34:16 INFO     Asset name: tromso_polariaola-roe.jpg, ID: itdpic50079-day7-21578555255.8871598
+2020-01-09 08:34:17 INFO     Asset added: itdpic50079-day7-21578555255.8871598
+2020-01-09 08:34:18 INFO     Entry exists: itday50079-6
+2020-01-09 08:34:20 INFO     Entry deleted: itday50079-6
+2020-01-09 08:34:21 INFO     Entry added: itday50079-6
+2020-01-09 08:34:22 INFO     Asset exists ID: itdpic50079-day8-0, checking file size
+2020-01-09 08:34:22 INFO     Epi image size: 51221
+2020-01-09 08:34:23 INFO     Contentful image size: 63065
+2020-01-09 08:34:23 INFO     Asset size is different
+2020-01-09 08:34:24 INFO     Asset name: nordkapp_liebing-magdalena_1200x600.jpg, ID: itdpic50079-day8-01578555263.361855
+2020-01-09 08:34:25 INFO     Asset added: itdpic50079-day8-01578555263.361855
+2020-01-09 08:34:26 INFO     Asset exists ID: itdpic50079-day8-1, checking file size
+2020-01-09 08:34:26 INFO     Epi image size: 186839
+2020-01-09 08:34:28 INFO     Contentful image size: 199720
+2020-01-09 08:34:28 INFO     Asset size is different
+2020-01-09 08:34:28 INFO     Asset name: hurtigruten_finnmarkorjan_bertelsen_1200x600.jpg, ID: itdpic50079-day8-11578555268.4359474
+2020-01-09 08:34:30 INFO     Asset added: itdpic50079-day8-11578555268.4359474
+2020-01-09 08:34:31 INFO     Entry exists: itday50079-7
+2020-01-09 08:34:32 INFO     Entry deleted: itday50079-7
+2020-01-09 08:34:34 INFO     Entry added: itday50079-7
+2020-01-09 08:34:35 INFO     Asset exists ID: itdpic50079-day9-0, checking file size
+2020-01-09 08:34:35 INFO     Epi image size: 180437
+2020-01-09 08:34:36 INFO     Contentful image size: 180437
+2020-01-09 08:34:36 INFO     Asset id and size are the same
+2020-01-09 08:34:36 INFO     Asset exists ID: itdpic50079-day9-1, checking file size
+2020-01-09 08:34:36 INFO     Epi image size: 156419
+2020-01-09 08:34:37 INFO     Contentful image size: 156419
+2020-01-09 08:34:37 INFO     Asset id and size are the same
+2020-01-09 08:34:37 INFO     Asset exists ID: itdpic50079-day9-2, checking file size
+2020-01-09 08:34:38 INFO     Epi image size: 163147
+2020-01-09 08:34:38 INFO     Contentful image size: 163147
+2020-01-09 08:34:38 INFO     Asset id and size are the same
+2020-01-09 08:34:39 INFO     Entry exists: itday50079-8
+2020-01-09 08:34:41 INFO     Entry deleted: itday50079-8
+2020-01-09 08:34:43 INFO     Entry added: itday50079-8
+2020-01-09 08:34:43 INFO     Asset exists ID: itdpic50079-day10-0, checking file size
+2020-01-09 08:34:43 INFO     Epi image size: 73974
+2020-01-09 08:34:44 INFO     Contentful image size: 80774
+2020-01-09 08:34:44 INFO     Asset size is different
+2020-01-09 08:34:45 INFO     itdpic50079-day10-01578555284.4107533 matches size to existing asset: itdpic50189-day7-0
+2020-01-09 08:34:45 INFO     Linking itdpic50079-day10-01578555284.4107533 to existing asset: itdpic50189-day7-0
+2020-01-09 08:34:46 INFO     Asset exists ID: itdpic50079-day10-1, checking file size
+2020-01-09 08:34:46 INFO     Epi image size: 120443
+2020-01-09 08:34:47 INFO     Contentful image size: 120961
+2020-01-09 08:34:47 INFO     Asset size is different
+2020-01-09 08:34:48 INFO     itdpic50079-day10-11578555287.2605655 matches size to existing asset: itdpic50189-day7-1
+2020-01-09 08:34:49 INFO     Linking itdpic50079-day10-11578555287.2605655 to existing asset: itdpic50189-day7-1
+2020-01-09 08:34:50 INFO     Asset exists ID: itdpic50079-day10-2, checking file size
+2020-01-09 08:34:50 INFO     Epi image size: 111995
+2020-01-09 08:34:52 INFO     Contentful image size: 120694
+2020-01-09 08:34:52 INFO     Asset size is different
+2020-01-09 08:34:54 INFO     itdpic50079-day10-21578555292.1477497 matches size to existing asset: itdpic50189-day7-2
+2020-01-09 08:34:55 INFO     Linking itdpic50079-day10-21578555292.1477497 to existing asset: itdpic50189-day7-2
+2020-01-09 08:34:56 INFO     Entry exists: itday50079-9
+2020-01-09 08:34:58 INFO     Entry deleted: itday50079-9
+2020-01-09 08:35:00 INFO     Entry added: itday50079-9
+2020-01-09 08:35:01 INFO     Asset exists ID: itdpic50079-day11-0, checking file size
+2020-01-09 08:35:01 INFO     Epi image size: 89938
+2020-01-09 08:35:03 INFO     Contentful image size: 114894
+2020-01-09 08:35:03 INFO     Asset size is different
+2020-01-09 08:35:03 INFO     Asset name: geissler-bronnoysund_angelika-geissler_1200x600.jpg, ID: itdpic50079-day11-01578555303.1312828
+2020-01-09 08:35:05 INFO     Asset added: itdpic50079-day11-01578555303.1312828
+2020-01-09 08:35:05 INFO     Asset exists ID: itdpic50079-day11-1, checking file size
+2020-01-09 08:35:06 INFO     Epi image size: 149326
+2020-01-09 08:35:06 INFO     Contentful image size: 235557
+2020-01-09 08:35:06 INFO     Asset size is different
+2020-01-09 08:35:07 INFO     Asset name: torghatten_img_1293-neu_1200x600.jpg, ID: itdpic50079-day11-11578555306.9057403
+2020-01-09 08:35:09 INFO     Asset added: itdpic50079-day11-11578555306.9057403
+2020-01-09 08:35:09 INFO     Asset exists ID: itdpic50079-day11-2, checking file size
+2020-01-09 08:35:09 INFO     Epi image size: 68104
+2020-01-09 08:35:10 INFO     Contentful image size: 74695
+2020-01-09 08:35:10 INFO     Asset size is different
+2020-01-09 08:35:10 INFO     Asset name: midnightneartorghatten_1200x600.jpg, ID: itdpic50079-day11-21578555310.4049056
+2020-01-09 08:35:12 INFO     Asset added: itdpic50079-day11-21578555310.4049056
+2020-01-09 08:35:12 INFO     Entry exists: itday50079-10
+2020-01-09 08:35:14 INFO     Entry deleted: itday50079-10
+2020-01-09 08:35:16 INFO     Entry added: itday50079-10
+2020-01-09 08:35:16 INFO     Asset exists ID: itdpic50079-day12-0, checking file size
+2020-01-09 08:35:16 INFO     Epi image size: 112792
+2020-01-09 08:35:17 INFO     Contentful image size: 141853
+2020-01-09 08:35:17 INFO     Asset size is different
+2020-01-09 08:35:18 INFO     Asset name: moldevidar-hoe-altafoto_no.jpg, ID: itdpic50079-day12-01578555317.6029317
+2020-01-09 08:35:19 INFO     Asset added: itdpic50079-day12-01578555317.6029317
+2020-01-09 08:35:20 INFO     Entry exists: itday50079-11
+2020-01-09 08:35:21 INFO     Entry deleted: itday50079-11
+2020-01-09 08:35:23 INFO     Entry added: itday50079-11
+2020-01-09 08:35:24 INFO     Asset exists ID: itdpic50079-day13-0, checking file size
+2020-01-09 08:35:24 INFO     Epi image size: 113020
+2020-01-09 08:35:26 INFO     Contentful image size: 119450
+2020-01-09 08:35:26 INFO     Asset size is different
+2020-01-09 08:35:27 INFO     Asset name: varlandet_jarkko-laine-wikimedia_1200x600.jpg, ID: itdpic50079-day13-01578555326.6102452
+2020-01-09 08:35:28 INFO     Asset added: itdpic50079-day13-01578555326.6102452
+2020-01-09 08:35:30 INFO     Entry exists: itday50079-12
+2020-01-09 08:35:30 INFO     Entry deleted: itday50079-12
+2020-01-09 08:35:36 INFO     Entry added: itday50079-12
+2020-01-09 08:35:36 INFO     Asset exists ID: itdpic50079-day14-0, checking file size
+2020-01-09 08:35:36 INFO     Epi image size: 121907
+2020-01-09 08:35:37 INFO     Contentful image size: 129373
+2020-01-09 08:35:37 INFO     Asset size is different
+2020-01-09 08:35:38 INFO     Asset name: 20100811_180643gian-rico-willy_1200x600.jpg, ID: itdpic50079-day14-01578555337.7470984
+2020-01-09 08:35:39 INFO     Asset added: itdpic50079-day14-01578555337.7470984
+2020-01-09 08:35:40 INFO     Asset exists ID: itdpic50079-day14-1, checking file size
+2020-01-09 08:35:40 INFO     Epi image size: 71254
+2020-01-09 08:35:41 INFO     Contentful image size: 79812
+2020-01-09 08:35:41 INFO     Asset size is different
+2020-01-09 08:35:41 INFO     Asset name: 20110616_0046stein-lillebo_1200x600.jpg, ID: itdpic50079-day14-11578555341.0333679
+2020-01-09 08:35:42 INFO     Asset added: itdpic50079-day14-11578555341.0333679
+2020-01-09 08:35:43 INFO     Entry exists: itday50079-13
+2020-01-09 08:35:44 INFO     Entry deleted: itday50079-13
+2020-01-09 08:35:45 INFO     Entry added: itday50079-13
+2020-01-09 08:35:47 INFO     itdpic50079-day15-0 matches size to existing asset: itdpic51143-day1415-0
+2020-01-09 08:35:47 INFO     Linking itdpic50079-day15-0 to existing asset: itdpic51143-day1415-0
+2020-01-09 08:35:48 INFO     Entry exists: itday50079-14
+2020-01-09 08:35:50 INFO     Entry deleted: itday50079-14
+2020-01-09 08:35:54 INFO     Entry added: itday50079-14
+2020-01-09 08:35:54 ERROR    Entry not found: 50079, can't be deleted
+2020-01-09 08:36:03 INFO     Entry added: 50079
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50189
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: 50079
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50417
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50458
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50526
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50548
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50574
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50595
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50619
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50671
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50705
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50727
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 50739
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 51069
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 51081
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 51143
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 51546
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 51653
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 51702
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 51790
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 55315
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 55340
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 55360
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 55402
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 58330
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 58353
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 58703
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 60449
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 60531
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62202
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62211
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62298
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62331
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62389
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62410
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62497
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62576
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62641
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62648
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62672
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62690
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62776
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62869
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62889
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration started with ID: 62915
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
+2020-01-09 08:36:03 INFO     Voyage migration finished with ID: None
