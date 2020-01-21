@@ -1,0 +1,5 @@
+contentful-management==2.8.0
+Flask==1.1.1
+Flask-Executor==0.9.3
+Flask-RESTful==0.3.7
+gunicorn==20.0.4

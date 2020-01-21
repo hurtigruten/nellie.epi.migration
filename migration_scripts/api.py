@@ -133,4 +133,5 @@ executor.add_default_done_callback(executor_callback)
 running_tasks = 0
 
 if __name__ == '__main__':
-    app.run(debug = True)
+    app.run(host = '0.0.0.0')
+    app.run(debug = False)

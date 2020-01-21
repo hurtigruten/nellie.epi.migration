@@ -170,7 +170,7 @@ def convert_to_contentful_rich_text(html_content):
 
     html_content = html_content.replace('\n', '').replace('\r', '')
 
-    req = Request("http://localhost:3000/convert")
+    req = Request("http://html-to-rich-text:3000/convert")
     req.add_header('Content-Type', 'application/json; charset=utf-8')
     json_data = json.dumps({'from': 'html', 'to': 'richtext', 'html': html_content})
     json_data_as_bytes = json_data.encode('utf-8')
