@@ -109,9 +109,9 @@ def update_voyage(contentful_environment, voyage):
 
 def run_sync(only_with_voyage_ids=None):
     if only_with_voyage_ids is not None:
-        logging.info('Running voyages migration sync on specified IDs: %s' % only_with_voyage_ids)
+        logging.info('Running voyages sync on specified IDs: %s' % only_with_voyage_ids)
     else:
-        logging.info('Running voyages migration sync')
+        logging.info('Running voyages sync')
     voyages, contentful_environment = prepare_environment()
     for voyage in voyages:
         if only_with_voyage_ids is not None and voyage['id'] not in only_with_voyage_ids:
@@ -122,6 +122,7 @@ def run_sync(only_with_voyage_ids=None):
 parser = ArgumentParser(prog = 'voyages.py', description = 'Run voyage sync between Contentful and EPI')
 parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide the IDs you want to run the sync on")
 args = parser.parse_args()
+
 
 if __name__ == '__main__':
     ids = vars(args)['content_ids']

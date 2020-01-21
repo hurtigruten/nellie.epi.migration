@@ -75,9 +75,9 @@ def update_excursion(contentful_environment, excursion):
 
 def run_sync(only_with_excursion_ids=None):
     if only_with_excursion_ids is not None:
-        logging.info('Running excursions migration sync on specified IDs: %s' % only_with_excursion_ids)
+        logging.info('Running excursions sync on specified IDs: %s' % only_with_excursion_ids)
     else:
-        logging.info('Running excursions migration sync')
+        logging.info('Running excursions sync')
     excursions, contentful_environment = prepare_environment()
     for excursion in excursions:
         if only_with_excursion_ids is not None and excursion['id'] not in only_with_excursion_ids:
@@ -88,6 +88,7 @@ def run_sync(only_with_excursion_ids=None):
 parser = ArgumentParser(prog = 'excursions.py', description = 'Run excursion sync between Contentful and EPI')
 parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide the IDs you want to run the sync on")
 args = parser.parse_args()
+
 
 if __name__ == '__main__':
     ids = vars(args)['content_ids']

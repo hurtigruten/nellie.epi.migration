@@ -453,10 +453,10 @@ def asset_link(asset_id):
 class ListConverter(BaseConverter):
 
     def to_python(self, value):
-        return value.split('+')
+        return value.split(',')
 
     def to_url(self, values):
-        return '+'.join(BaseConverter.to_url(value)
+        return ','.join(BaseConverter.to_url(value)
                         for value in values)
 
 class IntListConverter(BaseConverter):

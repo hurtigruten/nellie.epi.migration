@@ -21,32 +21,30 @@ import config
 import logging
 from urllib.parse import urlparse
 from os.path import splitext, basename
+from argparse import ArgumentParser
 
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
     level = logging.INFO,
     datefmt = '%Y-%m-%d %H:%M:%S')
 
-CMS_API_URL = "http://api.development.hurtigruten.com:80/api/CmsShips"
 
-logging.info('Setup Contentful environment')
-contentful_environment = helpers.create_contentful_environment(
-    config.CTFL_SPACE_ID, config.CTFL_ENV_ID,
-    config.CTFL_MGMT_API_KEY
-)
+def prepare_environment():
+    logging.info('Setup Contentful environment')
+    contentful_environment = helpers.create_contentful_environment(
+        config.CTFL_SPACE_ID, config.CTFL_ENV_ID,
+        config.CTFL_MGMT_API_KEY
+    )
 
-logging.info('Get all ships from Contentful')
-contentful_ships = contentful_environment.entries().all(query = {"content_type": "ship"})
-logging.info('Number of ships in Contentful: %s' % len(contentful_ships))
+    logging.info('Get all ships from Contentful')
+    contentful_ships = contentful_environment.entries().all(query = {"content_type": "ship"})
+    logging.info('Number of ships in Contentful: %s' % len(contentful_ships))
+    return contentful_ships, contentful_environment
 
-shipsToMerge = ["MS Roald Amundsen"]
 
-for ship in contentful_ships:
+def update_ship(contentful_environment, ship):
 
-    # if not ship.name in shipsToMerge:
-    #     continue
-
-    logging.info("Migrating data for ship %s" % ship.name)
+    logging.info("Migrating data for ship %s, %s" % (ship.name, ship.id))
     ship_data = helpers.read_json_data("%s/%s" % ("https://www.hurtigruten.com/rest/b2b/ships", ship.code))
 
     image_id = "shippic-%s" % ship.code
@@ -209,4 +207,25 @@ for ship in contentful_ships:
             logging.info('Ship %s deck plans updated' % ship.name)
         except Exception as e:
             logging.error('Could not publish ship deck plans with name: %s, error: %s' % (ship.name, e))
-    
+
+
+def run_sync(only_with_ship_ids=None):
+    if only_with_ship_ids is not None:
+        logging.info('Running ships sync on specified IDs: %s' % only_with_ship_ids)
+    else:
+        logging.info('Running ships sync')
+    contentful_ships, contentful_environment = prepare_environment()
+    for ship in contentful_ships:
+        if only_with_ship_ids is not None and ship.id not in only_with_ship_ids:
+            continue
+        update_ship(contentful_environment, ship)
+
+
+parser = ArgumentParser(prog = 'ships.py', description = 'Run ship sync between Contentful and EPI')
+parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide the IDs you want to run the sync on")
+args = parser.parse_args()
+
+
+if __name__ == '__main__':
+    ids = vars(args)['content_ids']
+    run_sync(only_with_ship_ids = ids)
