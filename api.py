@@ -1,8 +1,10 @@
 from flask import Flask
 from flask_executor import Executor
 from helpers import IntListConverter
-import excursions
 import logging
+import excursions
+import voyages
+
 
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -21,10 +23,22 @@ def sync_excursions():
     return start_task_executor_if_available([excursions.run_sync])
 
 
-@app.route('/sync/excursions/<int_list:excursion_ids>')
 @app.route('/sync/excursions/<int_list:excursion_ids>/')
-def sync_excursion_list(excursion_ids):
+@app.route('/sync/excursions/<int_list:excursion_ids>')
+def sync_excursion_with_excursion_ids(excursion_ids):
     return start_task_executor_if_available([excursions.run_sync, excursion_ids])
+
+
+@app.route('/sync/voyages/')
+@app.route('/sync/voyages')
+def sync_voyages():
+    return start_task_executor_if_available([voyages.run_sync])
+
+
+@app.route('/sync/voyages/<int_list:voyage_ids>/')
+@app.route('/sync/voyages/<int_list:voyage_ids>')
+def sync_voyages_with_voyage_ids(voyage_ids):
+    return start_task_executor_if_available([voyages.run_sync, voyage_ids])
 
 
 def start_task_executor_if_available(*task_and_parameters):
@@ -35,13 +49,10 @@ def start_task_executor_if_available(*task_and_parameters):
             logging.info('Running tasks: %s' % running_tasks)
             try:
                 task, parameters = task_and_parameter
-                logging.info(task_and_parameter)
-                logging.info(task)
                 executor.submit(task, parameters)
                 return 'Sync started for %s' % parameters
             except:
                 task = task_and_parameter[0]
-                logging.info(task)
                 executor.submit(task)
                 return 'Sync started for all content ids.'
         else:

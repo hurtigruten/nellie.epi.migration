@@ -12,8 +12,8 @@ deleted and re-imported.
 import config
 import helpers
 import logging
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import as_completed
+from argparse import ArgumentParser
+
 
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -22,24 +22,23 @@ logging.basicConfig(
 
 CMS_API_URL = "https://www.hurtigruten.com/rest/b2b/voyages"
 
-logging.info('Setup Contentful environment')
-contentful_environment = helpers.create_contentful_environment(
-    config.CTFL_SPACE_ID,
-    config.CTFL_ENV_ID,
-    config.CTFL_MGMT_API_KEY)
 
-logging.info('Get all voyages')
-voyages = helpers.read_json_data(CMS_API_URL)
-logging.info('Number of voyages in EPI: %s' % len(voyages))
+def prepare_environment():
+    logging.info('Setup Contentful environment')
+    contentful_environment = helpers.create_contentful_environment(
+        config.CTFL_SPACE_ID,
+        config.CTFL_ENV_ID,
+        config.CTFL_MGMT_API_KEY)
+
+    logging.info('Get all voyages')
+    voyages = helpers.read_json_data(CMS_API_URL)
+    logging.info('Number of voyages in EPI: %s' % len(voyages))
+    return voyages, contentful_environment
 
 
-# pVoyages = [50526,49665,50189,50417,50548,50705,50727,50739,51069,51081,40019,49628]
-
-def update_voyage(voyage):
+def update_voyage(contentful_environment, voyage):
     logging.info('Voyage migration started with ID: %s' % voyage['id'])
 
-    # if voyage['id'] not in pVoyages:
-    #     return
     # load all fields for the particular voyage by calling GET voyages/{id}
     voyage_detail = helpers.read_json_data("%s/%s" % (CMS_API_URL, voyage['id']))
 
@@ -105,14 +104,25 @@ def update_voyage(voyage):
         })
     )
 
-    return voyage['id']
+    logging.info('Voyage migration finished with ID: %s' % voyage['id'])
 
 
-def main():
-    with ThreadPoolExecutor(max_workers = 1) as executor:
-        running_tasks = {executor.submit(update_voyage, voyage): voyage for voyage in voyages}
-        for task in as_completed(running_tasks):
-            logging.info('Voyage migration finished with ID: %s' % task.result())
+def run_sync(only_with_voyage_ids=None):
+    if only_with_voyage_ids is not None:
+        logging.info('Running voyages migration sync on specified IDs: %s' % only_with_voyage_ids)
+    else:
+        logging.info('Running voyages migration sync')
+    voyages, contentful_environment = prepare_environment()
+    for voyage in voyages:
+        if only_with_voyage_ids is not None and voyage['id'] not in only_with_voyage_ids:
+            continue
+        update_voyage(contentful_environment, voyage)
 
 
-main()
+parser = ArgumentParser(prog = 'voyages.py', description = 'Run voyage sync between Contentful and EPI')
+parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide the IDs you want to run the sync on")
+args = parser.parse_args()
+
+if __name__ == '__main__':
+    ids = vars(args)['content_ids']
+    run_sync(only_with_voyage_ids = ids)

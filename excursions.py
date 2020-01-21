@@ -39,11 +39,7 @@ def prepare_environment():
     return excursions, contentful_environment
 
 
-def update_excursion(contentful_environment, excursion, only_with_excursion_ids=None):
-
-    if only_with_excursion_ids is not None and excursion['id'] not in only_with_excursion_ids:
-        return
-
+def update_excursion(contentful_environment, excursion):
     logging.info('Excursion migration started with ID: %s' % excursion['id'])
 
     helpers.add_entry(
@@ -84,7 +80,9 @@ def run_sync(only_with_excursion_ids=None):
         logging.info('Running excursions migration sync')
     excursions, contentful_environment = prepare_environment()
     for excursion in excursions:
-        update_excursion(contentful_environment, excursion, only_with_excursion_ids)
+        if only_with_excursion_ids is not None and excursion['id'] not in only_with_excursion_ids:
+            continue
+        update_excursion(contentful_environment, excursion)
 
 
 parser = ArgumentParser(prog = 'excursions.py', description = 'Run excursion sync between Contentful and EPI')
