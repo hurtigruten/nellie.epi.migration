@@ -9,8 +9,7 @@ and then imported from Episerver by this script.
 import config
 import helpers
 import logging
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import as_completed
+from argparse import ArgumentParser
 
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -18,6 +17,7 @@ logging.basicConfig(
     datefmt = '%Y-%m-%d %H:%M:%S')
 
 CMS_API_URL = 'https://www.hurtigruten.com/rest/excursion/excursions'
+
 difficulty_dict = {
     '1': 'Level 1 - For everyone',
     '2': 'Level 2 - Easy',
@@ -25,23 +25,26 @@ difficulty_dict = {
     '4': 'Level 4 - Hard'
 }
 
-logging.info('Setup Contentful environment')
-contentful_environment = helpers.create_contentful_environment(
-    config.CTFL_SPACE_ID,
-    config.CTFL_ENV_ID,
-    config.CTFL_MGMT_API_KEY)
 
-logging.info('Get all excursions')
-excursions = helpers.read_json_data(CMS_API_URL)
-logging.info('Number of excursions in EPI: %s' % len(excursions))
+def prepare_environment():
+    logging.info('Setup Contentful environment')
+    contentful_environment = helpers.create_contentful_environment(
+        config.CTFL_SPACE_ID,
+        config.CTFL_ENV_ID,
+        config.CTFL_MGMT_API_KEY)
 
-# exc = [61503,58199,57773,57772,58309,61507,58310,61510,45317,61514,59718,61517,61522,58314,58315,61525,45334,61528,58316,45336,61537,45338,61546,58317,61500]
+    logging.info('Get all excursions')
+    excursions = helpers.read_json_data(CMS_API_URL)
+    logging.info('Number of excursions in EPI: %s' % len(excursions))
+    return excursions, contentful_environment
 
-def update_excursion(excursion):
+
+def update_excursion(contentful_environment, excursion, only_with_excursion_ids=None):
+
+    if only_with_excursion_ids is not None and excursion['id'] not in only_with_excursion_ids:
+        return
+
     logging.info('Excursion migration started with ID: %s' % excursion['id'])
-
-    # if excursion['id'] not in exc:
-    #     return
 
     helpers.add_entry(
         environment = contentful_environment,
@@ -65,18 +68,29 @@ def update_excursion(excursion):
                     environment = contentful_environment,
                     asset_uri = excursion['image']['imageUrl'],
                     id = "excp%s" % excursion['id'],
-                    title = helpers.clean_asset_name(excursion['image']['altText'] or excursion['title'], excursion['id']))
+                    title = helpers.clean_asset_name(excursion['image']['altText'] or excursion['title'],
+                                                     excursion['id']))
             ] if excursion['image'] is not None else []
         })
     )
-    return excursion['id']
+
+    logging.info('Excursion migration finished with ID: %s' % excursion['id'])
 
 
-def main():
-    with ThreadPoolExecutor(max_workers = 1) as executor:
-        running_tasks = {executor.submit(update_excursion, excursion): excursion for excursion in excursions}
-        for task in as_completed(running_tasks):
-            logging.info('Excursion migration finished with ID: %s' % task.result())
+def run_sync(only_with_excursion_ids=None):
+    if only_with_excursion_ids is not None:
+        logging.info('Running excursions migration sync on specified IDs: %s' % only_with_excursion_ids)
+    else:
+        logging.info('Running excursions migration sync')
+    excursions, contentful_environment = prepare_environment()
+    for excursion in excursions:
+        update_excursion(contentful_environment, excursion, only_with_excursion_ids)
 
 
-main()
+parser = ArgumentParser(prog = 'excursions.py', description = 'Run excursion sync between Contentful and EPI')
+parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide the IDs you want to run the sync on")
+args = parser.parse_args()
+
+if __name__ == '__main__':
+    ids = vars(args)['content_ids']
+    run_sync(only_with_excursion_ids = ids)

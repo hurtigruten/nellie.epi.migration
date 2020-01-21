@@ -7,6 +7,7 @@ from urllib.request import Request, urlopen
 from urllib.parse import urlparse
 from os.path import splitext, basename
 from time import time
+from werkzeug.routing import BaseConverter
 
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -242,7 +243,7 @@ def add_asset(**kwargs):
         image_bytes = get_asset_size(image_url)
 
         logging.info('Epi image size: %s' % image_bytes)
-        
+
         resp = requests.get("http:" + kwargs['environment'].assets().find(id).fields()['file']['url'], stream = True)
         contentful_image_bytes = resp.headers['Content-length']
         resp.close()
@@ -290,7 +291,7 @@ def add_asset(**kwargs):
             if is_asset_exists(kwargs['environment'], asset.sys['id']):
                 logging.info('Linking %s to existing asset: %s' % (id, asset.sys['id']))
                 return asset_link(asset.sys['id'])
-    
+
     name = '%s%s' % splitext(basename(urlparse(image_url).path))
     asset_attributes = {
         'fields': {
@@ -447,6 +448,26 @@ def asset_link(asset_id):
             "id": asset_id,
         }
     }
+
+
+class ListConverter(BaseConverter):
+
+    def to_python(self, value):
+        return value.split('+')
+
+    def to_url(self, values):
+        return '+'.join(BaseConverter.to_url(value)
+                        for value in values)
+
+class IntListConverter(BaseConverter):
+    regex = r'\d+(?:,\d+)*,?'
+
+    def to_python(self, value):
+        return [int(x) for x in value.split(',')]
+
+    def to_url(self, value):
+        return ','.join(str(x) for x in value)
+
 
 # def compare_entry(new_fields, old_fields):
 #     """Compares the old and new fields in contentful"""
