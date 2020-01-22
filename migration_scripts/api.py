@@ -18,8 +18,8 @@ logging.basicConfig(
 
 app = Flask(__name__)
 
-app.config['BASIC_AUTH_USERNAME'] = os.environ['SYNC_USER']
-app.config['BASIC_AUTH_PASSWORD'] = os.environ['SYNC_PASSWORD']
+app.config['BASIC_AUTH_USERNAME'] = os.environ['SYNC_BASIC_AUTH_USER']
+app.config['BASIC_AUTH_PASSWORD'] = os.environ['SYNC_BASIC_AUTH_PASSWORD']
 app.config['EXECUTOR_TYPE'] = 'thread'
 app.config['EXECUTOR_MAX_WORKERS'] = 1
 app.config['BASIC_AUTH_FORCE'] = True
