@@ -1,3 +1,0 @@
-CTFL_MGMT_API_KEY = "CFPAT-Dv5bJb6RBX2TreAiuXofEzBAaxnZECf1nym9uKSOiQY"
-CTFL_SPACE_ID = "ni28i7bp31do"
-CTFL_ENV_ID = "master"
