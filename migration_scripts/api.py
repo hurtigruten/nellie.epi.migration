@@ -2,11 +2,14 @@ from flask import Flask
 from flask_executor import Executor
 from helpers import IntListConverter
 from helpers import ListConverter
+from flask_basicauth import BasicAuth
+import os
 import logging
 import excursions
 import voyages
 import ships
 import publish_imported_assets
+
 
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -14,11 +17,17 @@ logging.basicConfig(
     datefmt = '%Y-%m-%d %H:%M:%S')
 
 app = Flask(__name__)
-app.url_map.converters['int_list'] = IntListConverter
-app.url_map.converters['list'] = ListConverter
+
+app.config['BASIC_AUTH_USERNAME'] = os.environ['SYNC_USER']
+app.config['BASIC_AUTH_PASSWORD'] = os.environ['SYNC_PASSWORD']
 app.config['EXECUTOR_TYPE'] = 'thread'
 app.config['EXECUTOR_MAX_WORKERS'] = 1
+app.config['BASIC_AUTH_FORCE'] = True
 
+app.url_map.converters['int_list'] = IntListConverter
+app.url_map.converters['list'] = ListConverter
+
+basic_auth = BasicAuth(app)
 
 @app.route('/sync/excursions/')
 @app.route('/sync/excursions')
@@ -133,5 +142,5 @@ executor.add_default_done_callback(executor_callback)
 running_tasks = 0
 
 if __name__ == '__main__':
-    app.run(host = '0.0.0.0')
-    app.run(debug = False)
+    app.run(host = os.environ['SYNC_HOST'])
+    app.run(debug = os.environ['SYNC_DEBUG'])
