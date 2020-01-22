@@ -7,14 +7,14 @@ services:
     image: b2b-portal-migration-to-contentful
     restart: always
     environment:
-      - SYNC_CONTENTFUL_API_KEY
-      - SYNC_CONTENTFUL_SPACE_ID
-      - SYNC_CONTENTFUL_ENVIRONMENT
-      - SYNC_BASIC_AUTH_USER
       - SYNC_BASIC_AUTH_PASSWORD
-      - SYNC_RICH_TEXT_CONVERTER_URL
+      - SYNC_BASIC_AUTH_USER
+      - SYNC_CONTENTFUL_API_KEY
+      - SYNC_CONTENTFUL_ENVIRONMENT
+      - SYNC_CONTENTFUL_SPACE_ID
       - SYNC_HOST
       - SYNC_DEBUG
+      - SYNC_RICH_TEXT_CONVERTER_URL
     networks:
       - app_net
     ports:
