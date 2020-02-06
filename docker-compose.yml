@@ -4,7 +4,7 @@ services:
   
   migration-to-contentful:
     build: migration_scripts
-    image: b2b-portal-migration-to-contentful
+    image: b2b-portal-migration-to-contentful:1.0.1
     restart: always
     environment:
       - SYNC_BASIC_AUTH_PASSWORD
@@ -22,7 +22,7 @@ services:
 
   html-to-rich-text:
     build: html-to-rich-text
-    image: b2b-portal-html-to-rich-text
+    image: b2b-portal-html-to-rich-text:latest
     restart: always
     networks:
       app_net:
