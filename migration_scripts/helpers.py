@@ -45,7 +45,7 @@ def get_entry(environment, entry_id):
         entry = environment.entries().find(entry_id)
         return entry
     except contentful_management.errors.NotFoundError as e:
-        logging.error('Entry not found: %s' % entry_id)
+        logging.info('Entry not found: %s' % entry_id)
         return e
     except Exception as e:
         logging.error('Exception occurred while finding entry with ID: %s, error: %s ' % (entry_id, e))
@@ -113,7 +113,7 @@ def delete_entry_if_exists(environment, entry_id):
         environment.entries().delete(entry_id)
         logging.info("Entry deleted: %s" % entry_id)
     except contentful_management.errors.NotFoundError:
-        logging.error("Entry not found: %s, can't be deleted" % entry_id)
+        logging.info("Entry not found: %s, can't be deleted" % entry_id)
         return
     except Exception as e:
         logging.error('Exception occurred while deleting entry with ID: %s, error: %s ' % (entry_id, e))
@@ -131,7 +131,7 @@ def delete_asset_if_exists(environment, asset_id):
         environment.assets().delete(asset_id)
         logging.info('Asset deleted: %s' % asset_id)
     except contentful_management.errors.NotFoundError:
-        logging.error("Asset not found: %s, can't be deleted" % asset_id)
+        logging.info("Asset not found: %s, can't be deleted" % asset_id)
         return
     except Exception as e:
         logging.error('Exception occurred while deleting asset with ID: %s, error: %s ' % (asset_id, e))
