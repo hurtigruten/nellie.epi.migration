@@ -209,23 +209,36 @@ def update_ship(contentful_environment, ship):
             logging.error('Could not publish ship deck plans with name: %s, error: %s' % (ship.name, e))
 
 
-def run_sync(only_with_ship_ids=None):
-    if only_with_ship_ids is not None:
-        logging.info('Running ships sync on specified IDs: %s' % only_with_ship_ids)
+def run_sync(**kwargs):
+    ship_ids = kwargs.get('content_ids')
+    include = kwargs.get('include')
+    if ship_ids is not None:
+        if include:
+            logging.info('Running ship sync on specified IDs: %s' % ship_ids)
+        else:
+            logging.info('Running ship sync, skipping IDs: %s' % ship_ids)
     else:
         logging.info('Running ships sync')
-    contentful_ships, contentful_environment = prepare_environment()
-    for ship in contentful_ships:
-        if only_with_ship_ids is not None and ship.id not in only_with_ship_ids:
-            continue
+    ships, contentful_environment = prepare_environment()
+    for ship in ships:
+        if ship_ids is not None:
+            # run only included voyages
+            if include and ship.id not in ship_ids:
+                continue
+            # skip excluded voyages
+            if not include and ship.id in ship_ids:
+                continue
         update_ship(contentful_environment, ship)
 
 
 parser = ArgumentParser(prog = 'ships.py', description = 'Run ship sync between Contentful and EPI')
-parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide the IDs you want to run the sync on")
+parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide ship IDs")
+parser.add_argument("-include", "--include", nargs='+', type=bool, help = "Specify if you want to include or exclude "
+                                                                         "ship IDs")
 args = parser.parse_args()
 
 
 if __name__ == '__main__':
     ids = vars(args)['content_ids']
-    run_sync(only_with_ship_ids = ids)
+    include = vars(args)['include']
+    run_sync({"content_ids": ids, "include": include})

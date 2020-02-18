@@ -107,23 +107,36 @@ def update_voyage(contentful_environment, voyage):
     logging.info('Voyage migration finished with ID: %s' % voyage['id'])
 
 
-def run_sync(only_with_voyage_ids=None):
-    if only_with_voyage_ids is not None:
-        logging.info('Running voyages sync on specified IDs: %s' % only_with_voyage_ids)
+def run_sync(**kwargs):
+    voyage_ids = kwargs.get('content_ids')
+    include = kwargs.get('include')
+    if voyage_ids is not None:
+        if include:
+            logging.info('Running voyages sync on specified IDs: %s' % voyage_ids)
+        else:
+            logging.info('Running voyages sync, skipping IDs: %s' % voyage_ids)
     else:
         logging.info('Running voyages sync')
     voyages, contentful_environment = prepare_environment()
     for voyage in voyages:
-        if only_with_voyage_ids is not None and voyage['id'] not in only_with_voyage_ids:
-            continue
+        if voyage_ids is not None:
+            # run only included voyages
+            if include and voyage['id'] not in voyage_ids:
+                continue
+            # skip excluded voyages
+            if not include and voyage['id'] in voyage_ids:
+                continue
         update_voyage(contentful_environment, voyage)
 
 
 parser = ArgumentParser(prog = 'voyages.py', description = 'Run voyage sync between Contentful and EPI')
-parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide the IDs you want to run the sync on")
+parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide voyage IDs")
+parser.add_argument("-include", "--include", nargs='+', type=bool, help = "Specify if you want to include or exclude "
+                                                                         "voyage IDs")
 args = parser.parse_args()
 
 
 if __name__ == '__main__':
     ids = vars(args)['content_ids']
-    run_sync(only_with_voyage_ids = ids)
+    include = vars(args)['include']
+    run_sync({"content_ids": ids, "include": include})

@@ -73,23 +73,37 @@ def update_excursion(contentful_environment, excursion):
     logging.info('Excursion migration finished with ID: %s' % excursion['id'])
 
 
-def run_sync(only_with_excursion_ids=None):
-    if only_with_excursion_ids is not None:
-        logging.info('Running excursions sync on specified IDs: %s' % only_with_excursion_ids)
+def run_sync(**kwargs):
+    excursion_ids = kwargs.get('content_ids')
+    include = kwargs.get('include')
+    if excursion_ids is not None:
+        if include:
+            logging.info('Running excursion sync on specified IDs: %s' % excursion_ids)
+        else:
+            logging.info('Running excursion sync, skipping IDs: %s' % excursion_ids)
     else:
         logging.info('Running excursions sync')
     excursions, contentful_environment = prepare_environment()
     for excursion in excursions:
-        if only_with_excursion_ids is not None and excursion['id'] not in only_with_excursion_ids:
-            continue
+        if excursion_ids is not None:
+            # run only included voyages
+            if include and excursion['id'] not in excursion_ids:
+                continue
+            # skip excluded voyages
+            if not include and excursion['id'] in excursion_ids:
+                continue
         update_excursion(contentful_environment, excursion)
 
 
 parser = ArgumentParser(prog = 'excursions.py', description = 'Run excursion sync between Contentful and EPI')
-parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide the IDs you want to run the sync on")
+parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide excursion IDs")
+parser.add_argument("-include", "--include", nargs='+', type=bool, help = "Specify if you want to include or exclude "
+                                                                         "excursion IDs")
+
 args = parser.parse_args()
 
 
 if __name__ == '__main__':
     ids = vars(args)['content_ids']
-    run_sync(only_with_excursion_ids = ids)
+    include = vars(args)['include']
+    run_sync({"content_ids": ids, "include": include})

@@ -56,7 +56,8 @@ def publish_asset(contentful_environment, asset_keyword, limit):
                 logging.error("Asset cannot be processed, error: %s" % e)
 
 
-def run_publish(only_with_asset_types=None):
+def run_publish(**kwargs):
+    only_with_asset_types = kwargs.get('content_ids')
     if only_with_asset_types is not None:
         logging.info('Running asset publish on specified types: %s' % only_with_asset_types)
     else:
@@ -76,4 +77,4 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     types = vars(args)['asset_types']
-    run_publish(only_with_asset_types = types)
+    run_publish({'content_ids': types})

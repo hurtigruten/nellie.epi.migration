@@ -38,7 +38,13 @@ def sync_excursions():
 @app.route('/sync/excursions/<int_list:excursion_ids>/')
 @app.route('/sync/excursions/<int_list:excursion_ids>')
 def sync_excursion_with_excursion_ids(excursion_ids):
-    return start_task_executor_if_available(excursions.run_sync, excursion_ids)
+    return start_task_executor_if_available(excursions.run_sync, {"content_ids": excursion_ids, "include": True})
+
+
+@app.route('/sync/excursions/skip/<int_list:excursion_ids>/')
+@app.route('/sync/excursions/skip/<int_list:excursion_ids>')
+def sync_excursion_skip_excursion_ids(excursion_ids):
+    return start_task_executor_if_available(excursions.run_sync, {"content_ids": excursion_ids, "include": False})
 
 
 @app.route('/sync/voyages/')
@@ -50,7 +56,13 @@ def sync_voyages():
 @app.route('/sync/voyages/<int_list:voyage_ids>/')
 @app.route('/sync/voyages/<int_list:voyage_ids>')
 def sync_voyages_with_voyage_ids(voyage_ids):
-    return start_task_executor_if_available(voyages.run_sync, voyage_ids)
+    return start_task_executor_if_available(voyages.run_sync, {"content_ids": voyage_ids, "include": True})
+
+
+@app.route('/sync/voyages/skip/<int_list:voyage_ids>/')
+@app.route('/sync/voyages/skip/<int_list:voyage_ids>')
+def sync_voyages_skip_voyage_ids(voyage_ids):
+    return start_task_executor_if_available(voyages.run_sync, {"content_ids": voyage_ids, "include": False})
 
 
 @app.route('/sync/ships/')
@@ -62,7 +74,13 @@ def sync_ships():
 @app.route('/sync/ships/<list:ship_ids>/')
 @app.route('/sync/ships/<list:ship_ids>')
 def sync_ships_with_ship_ids(ship_ids):
-    return start_task_executor_if_available(ships.run_sync, ship_ids)
+    return start_task_executor_if_available(ships.run_sync, {"content_ids": ship_ids, "include": True})
+
+
+@app.route('/sync/ships/skip/<list:ship_ids>/')
+@app.route('/sync/ships/skip/<list:ship_ids>')
+def sync_ships_skip_ship_ids(ship_ids):
+    return start_task_executor_if_available(ships.run_sync, {"content_ids": ship_ids, "include": False})
 
 
 @app.route('/sync/all/')
@@ -83,7 +101,8 @@ def sync_all():
 @app.route('/publish/<list:asset_type>/')
 @app.route('/publish/<list:asset_type>')
 def publish_asset_type(asset_type):
-    return start_task_executor_if_available(publish_imported_assets.run_publish, asset_type)
+    return start_task_executor_if_available(
+        publish_imported_assets.run_publish, {"content_ids": asset_type, "include": True})
 
 
 @app.route('/publish/all/')
@@ -115,8 +134,11 @@ def start_task_executor_if_available(*task_and_parameters):
         logging.info('Running tasks: %s' % running_tasks)
         try:
             task, parameters = task_and_parameters
-            executor.submit(task, parameters)
-            return 'Sync or publish started for %s' % parameters
+            executor.submit(task, **parameters)
+            if parameters.get('include'):
+                return 'Sync or publish started for %s' % parameters['content_ids']
+            else:
+                return 'Sync or publish started, skipping %s' % parameters['content_ids']
         except:
             task = task_and_parameters[0]
             executor.submit(task)
