@@ -39,6 +39,13 @@ def prepare_environment():
     logging.info('Get all ships from Contentful')
     contentful_ships = contentful_environment.entries().all(query = {"content_type": "ship"})
     logging.info('Number of ships in Contentful: %s' % len(contentful_ships))
+    logging.info('')
+    logging.info('-----------------------------------------------------')
+    logging.info('Ship IDs to migrate: ')
+    for ship in contentful_ships:
+        logging.info(ship.id)
+    logging.info('-----------------------------------------------------')
+    logging.info('')
     return contentful_ships, contentful_environment
 
 

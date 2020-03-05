@@ -36,6 +36,14 @@ def prepare_environment():
     logging.info('Get all excursions')
     excursions = helpers.read_json_data(CMS_API_URL)
     logging.info('Number of excursions in EPI: %s' % len(excursions))
+    logging.info('')
+    logging.info('-----------------------------------------------------')
+    logging.info('Excursion IDs to migrate: ')
+    for excursion in excursions:
+        logging.info(excursion['id'])
+    logging.info('-----------------------------------------------------')
+    logging.info('')
+
     return excursions, contentful_environment
 
 

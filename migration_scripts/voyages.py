@@ -33,6 +33,14 @@ def prepare_environment():
     logging.info('Get all voyages')
     voyages = helpers.read_json_data(CMS_API_URL)
     logging.info('Number of voyages in EPI: %s' % len(voyages))
+    logging.info('')
+    logging.info('-----------------------------------------------------')
+    logging.info('Voyage IDs to migrate: ')
+    for voyage in voyages:
+        logging.info(voyage['id'])
+    logging.info('-----------------------------------------------------')
+    logging.info('')
+
     return voyages, contentful_environment
 
 
