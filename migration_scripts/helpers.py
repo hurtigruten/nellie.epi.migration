@@ -7,7 +7,7 @@ from re import split
 from urllib.request import Request, urlopen
 from urllib.parse import urlparse
 from os.path import splitext, basename
-from time import time
+from datetime import datetime
 from werkzeug.routing import BaseConverter
 
 logging.basicConfig(
@@ -32,7 +32,7 @@ def create_contentful_environment(space_id, env_id, cma_key):
 
 
 def camelize(string):
-    pascalized = ''.join(a.capitalize() for a in split('([^a-zA-Z0-9])', string) if a.isalnum())
+    pascalized = ''.join(a.capitalize() for a in split('([^a-zA-Z0-9])', string) if (a.isascii()) and a.isalnum())
     return pascalized[0].lower() + pascalized[1:]
 
 
@@ -247,10 +247,20 @@ def add_asset(**kwargs):
 
         logging.info('Epi image size: %s' % image_bytes)
 
-        resp = requests.get("http:" + kwargs['environment'].assets().find(id).fields()['file']['url'], stream = True)
-        contentful_image_bytes = resp.headers['Content-length']
-        resp.close()
-        logging.info('Contentful image size: %s' %contentful_image_bytes)
+        asset_fields = kwargs['environment'].assets().find(id).fields()
+        asset_file = asset_fields['file']
+        asset_url = asset_file['url']
+
+        contentful_image_bytes = 0
+
+        if asset_file is not None and asset_url is not None:
+            resp = requests.get("http:" + asset_url, stream = True)
+            contentful_image_bytes = resp.headers['Content-length']
+            resp.close()
+        else:
+            logging.error('Could not determine asset url')
+
+        logging.info('Contentful image size: %s' % contentful_image_bytes)
 
         # 2. has the same asset ID -> check the file size as well
         if image_bytes == contentful_image_bytes:
@@ -258,7 +268,7 @@ def add_asset(**kwargs):
             return asset_link(id)
         else:
             logging.info('Asset size is different')
-            id = id + str(time())
+            id = id + datetime.now().strftime('%Y%m%d.%H%M%S.%f')
 
     # 3. the image with a different file size might be already in contentful, so we have to reuse that one
 

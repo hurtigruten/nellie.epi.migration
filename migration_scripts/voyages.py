@@ -63,6 +63,67 @@ def update_voyage(contentful_environment, voyage_id):
         # load all fields for the particular voyage by calling GET voyages/{id}
         voyage_detail_by_locale[locale] = helpers.read_json_data("%s/%s" % (url, voyage_id))
 
+    default_voyage_detail = voyage_detail_by_locale[config.DEFAULT_LOCALE]
+
+    if default_voyage_detail is None:
+        logging.info('Could not find default voyage detail for voyage ID: %s' % voyage_id)
+        return
+
+    # Assuming that number of selling points is the same for every locale
+    usps = [
+        helpers.add_entry(
+            environment = contentful_environment,
+            id = "usp%s-%d" % (voyage_id, i),
+            content_type_id = "usp",
+            fields = helpers.merge_localized_dictionaries(*(
+                helpers.field_localizer(
+                    locale, {'text': locale_voyage_detail['sellingPoints'][i]}
+                )
+                for locale, locale_voyage_detail in voyage_detail_by_locale.items()
+            ))
+        ) for i, usp in enumerate(default_voyage_detail['sellingPoints'])
+    ]
+
+    # Assuming that media is same for every locale
+    media = [
+        helpers.add_asset(
+            environment = contentful_environment,
+            asset_uri = media_item['highResolutionUri'],
+            id = "voyagePicture%s-%d" % (voyage_id, i),
+            title = media_item['alternateText']
+        ) for i, media_item in enumerate(default_voyage_detail['mediaContent'])
+    ]
+
+    # Assuming that itinerary days are the same for every locale
+    itinerary = [
+        helpers.add_entry(
+            environment = contentful_environment,
+            id = "itday%s-%d" % (voyage_id, i),
+            content_type_id = "itineraryDay",
+            fields = helpers.merge_localized_dictionaries(*(
+                helpers.field_localizer(locale, {
+                    'day': locale_voyage_detail['itinerary'][i]['day'],
+                    'location': locale_voyage_detail['itinerary'][i]['location'],
+                    'name': locale_voyage_detail['itinerary'][i]['heading'],
+                    'description': helpers.convert_to_contentful_rich_text(
+                        locale_voyage_detail['itinerary'][i]['body']
+                    ),
+                    'images': [
+                        helpers.add_asset(
+                            environment = contentful_environment,
+                            asset_uri = media_item['highResolutionUri'],
+                            id = "itdpic%d-%s-%d" % (
+                                locale_voyage_detail['id'],
+                                helpers.camelize(locale_voyage_detail['itinerary'][i]['day']),
+                                k),
+                            title = media_item['alternateText']
+                        ) for k, media_item in enumerate(locale_voyage_detail['itinerary'][i]['mediaContent'])
+                    ]
+                }) for locale, locale_voyage_detail in voyage_detail_by_locale.items()
+            ))
+        ) for i, itinerary_day in enumerate(default_voyage_detail['itinerary'])
+    ]
+
     helpers.add_entry(
         environment = contentful_environment,
         id = str(voyage_id),
@@ -79,58 +140,16 @@ def update_voyage(contentful_environment, voyage_id):
                 'fromPort': helpers.entry_link(voyage_detail['fromPort']),
                 'toPort': helpers.entry_link(voyage_detail['toPort']),
                 'notes': helpers.convert_to_contentful_rich_text(voyage_detail['notes']),
-                'usps': [
-                    helpers.add_entry(
-                        environment = contentful_environment,
-                        id = "usp%d-%d" % (voyage_detail['id'], i),
-                        content_type_id = "usp",
-                        fields = helpers.merge_localized_dictionaries(*(
-                            helpers.field_localizer(
-                                locale, {'text': voyage_detail['sellingPoints'][i]}
-                            )
-                            for locale, voyage_detail in voyage_detail_by_locale.items()
-                        ))
-                    ) for i, usp in enumerate(voyage_detail['sellingPoints'])
-                ],
-                'map': helpers.add_asset(
+                'usps': usps,
+                'map': helpers.add_asset(  # assuming map can be different for different locales
                     environment = contentful_environment,
                     asset_uri = voyage_detail['largeMap']['highResolutionUri'],
-                    id = "voyageMap%d" % voyage_detail['id'],
+                    id = "voyageMap%d-%s" % (voyage_id, locale),
                     title = voyage_detail['largeMap']['alternateText'],
                     file_name = voyage_detail['largeMap']['alternateText']
                 ),
-                'media': [
-                    helpers.add_asset(
-                        environment = contentful_environment,
-                        asset_uri = media_item['highResolutionUri'],
-                        id = "voyagePicture%d-%d" % (voyage_detail['id'], i),
-                        title = media_item['alternateText']
-                    ) for i, media_item in enumerate(voyage_detail['mediaContent'])
-                ],
-                'itinerary': [
-                    helpers.add_entry(
-                        environment = contentful_environment,
-                        id = "itday%d-%d" % (voyage_detail['id'], i),
-                        content_type_id = "itineraryDay",
-                        fields = helpers.merge_localized_dictionaries(*(
-                            helpers.field_localizer(locale, {
-                                'day': voyage_detail['itinerary'][i]['day'],
-                                'location': voyage_detail['itinerary'][i]['location'],
-                                'name': voyage_detail['itinerary'][i]['heading'],
-                                'description': helpers.convert_to_contentful_rich_text(voyage_detail['itinerary'][i]['body']),
-                                'images': [
-                                    helpers.add_asset(
-                                        environment = contentful_environment,
-                                        asset_uri = media_item['highResolutionUri'],
-                                        id = "itdpic%d-%s-%d" % (
-                                            voyage_detail['id'], helpers.camelize(voyage_detail['itinerary'][i]['day']), i),
-                                        title = media_item['alternateText']
-                                    ) for i, media_item in enumerate(voyage_detail['itinerary'][i]['mediaContent'])
-                                ]
-                            }) for locale, voyage_detail in voyage_detail_by_locale.items()
-                        ))
-                    ) for i, itinerary_day in enumerate(voyage_detail['itinerary'])
-                ]
+                'media': media,
+                'itinerary': itinerary
             }) for locale, voyage_detail in voyage_detail_by_locale.items()
         ))
     )
