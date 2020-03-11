@@ -248,8 +248,18 @@ def add_asset(**kwargs):
         logging.info('Epi image size: %s' % image_bytes)
 
         asset_fields = kwargs['environment'].assets().find(id).fields()
-        asset_file = asset_fields['file']
-        asset_url = asset_file['url']
+
+        asset_file = None
+        try:
+            asset_file = asset_fields['file']
+        except Exception as e:
+            logging.error('Asset file is not available: %s' % e)
+
+        asset_url = None
+        try:
+            asset_url = asset_file['url']
+        except Exception as e:
+            logging.error('Asset url is not available: %s' % e)
 
         contentful_image_bytes = 0
 
