@@ -26,7 +26,9 @@ def read_json_data(url):
 
 def create_contentful_environment(space_id, env_id, cma_key):
     """Create Contentful environment given space, environment and Content Management API key"""
-    return contentful_management.Client(cma_key).environments(space_id).find(env_id)
+    client = contentful_management.Client(cma_key)
+    client.default_locale = 'en'
+    return client.environments(space_id).find(env_id)
 
 
 def camelize(string):
@@ -65,7 +67,7 @@ def add_entry_with_code_if_not_exist(environment, content_type_id, entry_id):
         environment = environment,
         id = entry_id,
         content_type_id = content_type_id,
-        fields = field_localizer('en-US', {
+        fields = field_localizer('en', {
             'code': entry_id
         })
     )
@@ -297,10 +299,10 @@ def add_asset(**kwargs):
     asset_attributes = {
         'fields': {
             "title": {
-                'en-US': clean_asset_name(name, id)
+                'en': clean_asset_name(name, id)
             },
             'file': {
-                'en-US': {
+                'en': {
                     'fileName': '%s%s' % splitext(basename(urlparse(image_url).path)),
                     'upload': image_url,
                     'contentType': asset_type
@@ -419,6 +421,19 @@ def field_localizer(locale, field_dict):
             locale: value
         }
     return d
+
+
+def merge_localized_dictionaries(*args):
+    merged = {}
+    for localized_dicts in args:
+        for field_name, locale_pair in localized_dicts.items():
+            if field_name in merged:
+                existing_locale_dict = merged[field_name].copy()
+                new_locale_dict = {**locale_pair, **existing_locale_dict}
+                merged[field_name] = new_locale_dict
+            else:
+                merged[field_name] = locale_pair
+    return merged
 
 
 def entry_link(entry_id):
