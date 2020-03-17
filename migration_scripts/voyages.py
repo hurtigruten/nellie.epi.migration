@@ -176,12 +176,15 @@ def run_sync(**kwargs):
             # skip excluded voyages
             if not include and voyage_id in parameter_voyage_ids:
                 continue
-        update_voyage(contentful_environment, voyage_id)
+        try:
+            update_voyage(contentful_environment, voyage_id)
+        except Exception as e:
+            logging.error('Voyage migration error with ID: %s, error: %s' % (voyage_id, e))
 
 
 parser = ArgumentParser(prog = 'voyages.py', description = 'Run voyage sync between Contentful and EPI')
 parser.add_argument("-ids", "--content_ids", nargs = '+', type = int, help = "Provide voyage IDs")
-parser.add_argument("-include", "--include", nargs = '+', type = bool,
+parser.add_argument("-include", "--include", nargs = '?', type = helpers.str2bool, const=True, default=True,
                     help = "Specify if you want to include or exclude "
                            "voyage IDs")
 args = parser.parse_args()
