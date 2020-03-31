@@ -312,11 +312,9 @@ def add_asset(**kwargs):
         image_bytes = resp.content
         resp.close()
 
-        asset_fields = kwargs['environment'].assets().find(id).fields()
-
         asset_file = None
         try:
-            asset_file = asset_fields['file']
+            asset_file = asset.fields()['file']
         except Exception as e:
             logging.error('Asset file is not available: %s' % e)
 
