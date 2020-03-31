@@ -312,6 +312,8 @@ def add_asset(**kwargs):
         image_bytes = resp.content
         resp.close()
 
+        asset_fields = kwargs['environment'].assets().find(id).fields()
+
         asset_file = None
         try:
             asset_file = asset_fields['file']

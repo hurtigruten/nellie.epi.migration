@@ -20,9 +20,10 @@ logging.basicConfig(
     datefmt = '%Y-%m-%d %H:%M:%S')
 
 CMS_API_URLS = {
-    "en": "https://global.hurtigruten.com/rest/b2b/voyages",
-    "EN-AMERICAS": "https://www.hurtigruten.com/rest/b2b/voyages",
-    "EN-APAC": "https://www.hurtigruten.com.au/rest/b2b/voyages"
+    "en-US": "https://www.hurtigruten.com/rest/b2b/voyages"
+    # "en": "https://global.hurtigruten.com/rest/b2b/voyages",
+    # "EN-AMERICAS": "https://www.hurtigruten.com/rest/b2b/voyages",
+    # "EN-APAC": "https://www.hurtigruten.com.au/rest/b2b/voyages"
 }
 
 
