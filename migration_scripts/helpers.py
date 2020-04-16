@@ -56,6 +56,21 @@ def get_entry(environment, entry_id):
         return e
 
 
+def get_all_entries_for_content_type(environment, content_type, limit, skip=0):
+    try:
+        entries = environment.content_types().find(content_type).entries().all({
+            'limit': limit,
+            'skip': skip
+        })
+        return entries
+    except contentful_management.errors.NotFoundError as e:
+        logging.info('Entries not found for content type: %s' % content_type)
+        return e
+    except Exception as e:
+        logging.error('Exception occurred while finding entries for content type: %s, error: %s ' % (content_type, e))
+        return e
+
+
 def add_entry_with_code_if_not_exist(environment, content_type_id, entry_id):
     """
     If entry with given entry ID doesn't exist,
