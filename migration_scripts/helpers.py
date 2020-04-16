@@ -230,6 +230,8 @@ def add_asset(**kwargs):
             image_url = "https://www.hurtigruten.com" + image_url
         if image_url.startswith("//www.hurtigruten.com"):
             image_url = "https:" + image_url
+        if image_url.startswith("//global.hurtigruten.com"):
+            image_url = "https:" + image_url
 
     id = kwargs['id'].replace("/", "")
 

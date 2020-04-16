@@ -20,10 +20,10 @@ logging.basicConfig(
     datefmt = '%Y-%m-%d %H:%M:%S')
 
 CMS_API_URLS = {
-    "en-US": "https://www.hurtigruten.com/rest/b2b/voyages"
-    # "en": "https://global.hurtigruten.com/rest/b2b/voyages",
-    # "EN-AMERICAS": "https://www.hurtigruten.com/rest/b2b/voyages",
-    # "EN-APAC": "https://www.hurtigruten.com.au/rest/b2b/voyages"
+    # "en-US": "https://www.hurtigruten.com/rest/b2b/voyages"
+    "en": "https://global.hurtigruten.com/rest/b2b/voyages",
+    "EN-AMERICAS": "https://www.hurtigruten.com/rest/b2b/voyages",
+    "EN-APAC": "https://www.hurtigruten.com.au/rest/b2b/voyages"
 }
 
 
@@ -189,6 +189,7 @@ parser.add_argument("-include", "--include", nargs = '?', type = helpers.str2boo
                     help = "Specify if you want to include or exclude "
                            "voyage IDs")
 args = parser.parse_args()
+
 
 if __name__ == '__main__':
     ids = vars(args)['content_ids']
