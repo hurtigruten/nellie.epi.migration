@@ -51,7 +51,8 @@ def prepare_environment():
 
 def update_ship(contentful_environment, ship):
 
-    logging.info("Migrating data for ship %s, %s" % (ship.name, ship.id))
+    logging.info("Migrating data for ship %s, %s, %s" % (ship.name, ship.id, ship.code))
+
     ship_data = helpers.read_json_data("%s/%s" % ("https://www.hurtigruten.com/rest/b2b/ships", ship.code))
 
     image_id = "shippic-%s" % ship.code
@@ -248,4 +249,4 @@ args = parser.parse_args()
 if __name__ == '__main__':
     ids = vars(args)['content_ids']
     include = vars(args)['include']
-    run_sync({"content_ids": ids, "include": include})
+    run_sync(**{"content_ids": ids, "include": include})

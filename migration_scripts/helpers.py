@@ -1,13 +1,15 @@
+import argparse
 import json
 import contentful_management
 import requests
 import logging
 import os
+import config
 from re import split
 from urllib.request import Request, urlopen
 from urllib.parse import urlparse
 from os.path import splitext, basename
-from time import time
+from datetime import datetime
 from werkzeug.routing import BaseConverter
 
 logging.basicConfig(
@@ -26,11 +28,13 @@ def read_json_data(url):
 
 def create_contentful_environment(space_id, env_id, cma_key):
     """Create Contentful environment given space, environment and Content Management API key"""
-    return contentful_management.Client(cma_key).environments(space_id).find(env_id)
+    client = contentful_management.Client(cma_key)
+    client.default_locale = config.DEFAULT_LOCALE
+    return client.environments(space_id).find(env_id)
 
 
 def camelize(string):
-    pascalized = ''.join(a.capitalize() for a in split('([^a-zA-Z0-9])', string) if a.isalnum())
+    pascalized = ''.join(a.capitalize() for a in split('([^a-zA-Z0-9])', string) if (a.isascii()) and a.isalnum())
     return pascalized[0].lower() + pascalized[1:]
 
 
@@ -52,6 +56,21 @@ def get_entry(environment, entry_id):
         return e
 
 
+def get_all_entries_for_content_type(environment, content_type, limit, skip=0):
+    try:
+        entries = environment.content_types().find(content_type).entries().all({
+            'limit': limit,
+            'skip': skip
+        })
+        return entries
+    except contentful_management.errors.NotFoundError as e:
+        logging.info('Entries not found for content type: %s' % content_type)
+        return e
+    except Exception as e:
+        logging.error('Exception occurred while finding entries for content type: %s, error: %s ' % (content_type, e))
+        return e
+
+
 def add_entry_with_code_if_not_exist(environment, content_type_id, entry_id):
     """
     If entry with given entry ID doesn't exist,
@@ -65,7 +84,7 @@ def add_entry_with_code_if_not_exist(environment, content_type_id, entry_id):
         environment = environment,
         id = entry_id,
         content_type_id = content_type_id,
-        fields = field_localizer('en-US', {
+        fields = field_localizer(config.DEFAULT_LOCALE, {
             'code': entry_id
         })
     )
@@ -220,12 +239,27 @@ def add_asset(**kwargs):
     """
 
     # get asset base URI
+    logging.info('------------------------------------------')
+    logging.info('Original EPI URL: %s' % kwargs['asset_uri'])
     image_url = kwargs['asset_uri'].split('?')[0]
     if not image_url.startswith("http"):
         if image_url.startswith("/globalassets"):
             image_url = "https://www.hurtigruten.com" + image_url
         if image_url.startswith("//www.hurtigruten.com"):
             image_url = "https:" + image_url
+        if image_url.startswith("//global.hurtigruten.com"):
+            image_url = "https:" + image_url
+        if image_url.startswith("//www.hurtigruten.co.uk"):
+            image_url = "https:" + image_url
+        if image_url.startswith("//www.hurtigruten.com.au"):
+            image_url = "https:" + image_url
+    if image_url.startswith('https://www.hurtigruten.com.auhttps://www.hurtigruten.co.uk'):
+        image_url = image_url.replace('https://www.hurtigruten.com.au', '')
+    if image_url.startswith('https://global.hurtigruten.comhttps://www.hurtigruten.co.uk'):
+        image_url = image_url.replace('https://global.hurtigruten.com', '')
+
+    logging.info('Fixed URL: %s' % image_url)
+    logging.info('------------------------------------------')
 
     id = kwargs['id'].replace("/", "")
 
@@ -241,14 +275,38 @@ def add_asset(**kwargs):
         # logging.info('Asset exists, skip asset ID: %s' % id)
         logging.info('Asset exists ID: %s, checking file size' % id)
 
-        image_bytes = get_asset_size(image_url)
+        image_bytes = 0
+        try:
+            image_bytes = get_asset_size(image_url)
+        except Exception as e:
+            logging.error('Could not retrieve image with url: %s, error: %s' % (image_url, e))
 
         logging.info('Epi image size: %s' % image_bytes)
 
-        resp = requests.get("http:" + kwargs['environment'].assets().find(id).fields()['file']['url'], stream = True)
-        contentful_image_bytes = resp.headers['Content-length']
-        resp.close()
-        logging.info('Contentful image size: %s' %contentful_image_bytes)
+        asset_fields = kwargs['environment'].assets().find(id).fields()
+
+        asset_file = None
+        try:
+            asset_file = asset_fields['file']
+        except Exception as e:
+            logging.error('Asset file is not available: %s' % e)
+
+        asset_url = None
+        try:
+            asset_url = asset_file['url']
+        except Exception as e:
+            logging.error('Asset url is not available: %s' % e)
+
+        contentful_image_bytes = 0
+
+        if asset_file is not None and asset_url is not None:
+            resp = requests.get("http:" + asset_url, stream = True)
+            contentful_image_bytes = resp.headers['Content-length']
+            resp.close()
+        else:
+            logging.error('Could not determine asset url')
+
+        logging.info('Contentful image size: %s' % contentful_image_bytes)
 
         # 2. has the same asset ID -> check the file size as well
         if image_bytes == contentful_image_bytes:
@@ -256,7 +314,7 @@ def add_asset(**kwargs):
             return asset_link(id)
         else:
             logging.info('Asset size is different')
-            id = id + str(time())
+            id = id + datetime.now().strftime('%Y%m%d.%H%M%S.%f')
 
     # 3. the image with a different file size might be already in contentful, so we have to reuse that one
 
@@ -268,7 +326,8 @@ def add_asset(**kwargs):
             image_fetch_success = True
         except requests.exceptions.MissingSchema:
             # sometimes Epi provides corrupt URLs that can be fixed manually
-            if input("Cannot retrieve asset. Would you like to manually override the URL: %s (y/n) " % image_url) == 'y':
+            if input(
+                    "Cannot retrieve asset. Would you like to manually override the URL: %s (y/n) " % image_url) == 'y':
                 image_url = input("Image URL: ")
             else:
                 return None
@@ -283,9 +342,25 @@ def add_asset(**kwargs):
         image_bytes = resp.content
         resp.close()
 
-        resp = requests.get("http:" + asset.fields()['file']['url'], stream = True)
-        contentful_image_bytes = resp.content
-        resp.close()
+        asset_file = None
+        try:
+            asset_file = asset.fields()['file']
+        except Exception as e:
+            logging.error('Asset file is not available: %s' % e)
+
+        asset_url = None
+        try:
+            asset_url = asset_file['url']
+        except Exception as e:
+            logging.error('Asset url is not available: %s' % e)
+
+        contentful_image_bytes = 0
+        if asset_file is not None and asset_url is not None:
+            resp = requests.get("http:" + asset_url, stream = True)
+            contentful_image_bytes = resp.content
+            resp.close()
+        else:
+            logging.error('Could not determine asset url')
 
         if image_bytes == contentful_image_bytes:
             logging.info('%s matches size to existing asset: %s' % (id, asset.sys['id']))
@@ -297,10 +372,10 @@ def add_asset(**kwargs):
     asset_attributes = {
         'fields': {
             "title": {
-                'en-US': clean_asset_name(name, id)
+                config.DEFAULT_LOCALE: clean_asset_name(name, id)
             },
             'file': {
-                'en-US': {
+                config.DEFAULT_LOCALE: {
                     'fileName': '%s%s' % splitext(basename(urlparse(image_url).path)),
                     'upload': image_url,
                     'contentType': asset_type
@@ -331,6 +406,7 @@ def add_asset(**kwargs):
 
     return asset_link(id)
 
+
 def get_asset_size(uri):
     """Return asset size if possible to read by image URI, otherwise return 0"""
 
@@ -342,6 +418,7 @@ def get_asset_size(uri):
     else:
         return 0
     resp.close()
+
 
 def get_asset_type_and_size(uri):
     """Return asset type and size if possible to read by image URI, otherwise return 0"""
@@ -403,7 +480,7 @@ def add_entry(**kwargs):
     try:
         kwargs['environment'].entries().find(id).publish()
     except Exception as e:
-        logging.error('Exception occurred while publishing entry with ID: %s, error: %s' % (id,e))
+        logging.error('Exception occurred while publishing entry with ID: %s, error: %s' % (id, e))
         return e
 
     logging.info('Entry added: %s' % id)
@@ -419,6 +496,19 @@ def field_localizer(locale, field_dict):
             locale: value
         }
     return d
+
+
+def merge_localized_dictionaries(*args):
+    merged = {}
+    for localized_dicts in args:
+        for field_name, locale_pair in localized_dicts.items():
+            if field_name in merged:
+                existing_locale_dict = merged[field_name].copy()
+                new_locale_dict = {**locale_pair, **existing_locale_dict}
+                merged[field_name] = new_locale_dict
+            else:
+                merged[field_name] = locale_pair
+    return merged
 
 
 def entry_link(entry_id):
@@ -451,6 +541,17 @@ def asset_link(asset_id):
     }
 
 
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 class ListConverter(BaseConverter):
 
     def to_python(self, value):
@@ -460,6 +561,7 @@ class ListConverter(BaseConverter):
         return ','.join(BaseConverter.to_url(value)
                         for value in values)
 
+
 class IntListConverter(BaseConverter):
     regex = r'\d+(?:,\d+)*,?'
 
@@ -468,7 +570,6 @@ class IntListConverter(BaseConverter):
 
     def to_url(self, value):
         return ','.join(str(x) for x in value)
-
 
 # def compare_entry(new_fields, old_fields):
 #     """Compares the old and new fields in contentful"""
@@ -484,5 +585,5 @@ class IntListConverter(BaseConverter):
 #                 continue
 #         if new_fields[newKey]["en-US"] != old_fields['en-US'][key]:
 #             result = False
-    
+
 #     return result

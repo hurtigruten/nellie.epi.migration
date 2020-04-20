@@ -14,13 +14,17 @@ import helpers
 import logging
 from argparse import ArgumentParser
 
-
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
     level = logging.INFO,
     datefmt = '%Y-%m-%d %H:%M:%S')
 
-CMS_API_URL = "https://www.hurtigruten.com/rest/b2b/voyages"
+CMS_API_URLS = {
+    # "en-US": "https://www.hurtigruten.com/rest/b2b/voyages"
+    "en": "https://global.hurtigruten.com/rest/b2b/voyages",
+    "EN-AMERICAS": "https://www.hurtigruten.com/rest/b2b/voyages",
+    "EN-APAC": "https://www.hurtigruten.com.au/rest/b2b/voyages"
+}
 
 
 def prepare_environment():
@@ -30,121 +34,164 @@ def prepare_environment():
         config.CTFL_ENV_ID,
         config.CTFL_MGMT_API_KEY)
 
-    logging.info('Get all voyages')
-    voyages = helpers.read_json_data(CMS_API_URL)
-    logging.info('Number of voyages in EPI: %s' % len(voyages))
+    logging.info('Get all voyages for locales: %s' % (", ".join([key for key, value in CMS_API_URLS.items()])))
+
+    voyage_ids = []
+    for key, value in CMS_API_URLS.items():
+        voyage_ids += [voyage['id'] for voyage in helpers.read_json_data(value)]
+
+    # Create distinct list
+    voyage_ids = set(voyage_ids)
+
+    logging.info('Number of voyages in EPI: %s' % len(voyage_ids))
     logging.info('')
     logging.info('-----------------------------------------------------')
     logging.info('Voyage IDs to migrate: ')
-    for voyage in voyages:
-        logging.info(voyage['id'])
+    for voyage_id in voyage_ids:
+        logging.info(voyage_id)
     logging.info('-----------------------------------------------------')
     logging.info('')
 
-    return voyages, contentful_environment
+    return voyage_ids, contentful_environment
 
 
-def update_voyage(contentful_environment, voyage):
-    logging.info('Voyage migration started with ID: %s' % voyage['id'])
+def update_voyage(contentful_environment, voyage_id):
+    logging.info('Voyage migration started with ID: %s' % voyage_id)
 
-    # load all fields for the particular voyage by calling GET voyages/{id}
-    voyage_detail = helpers.read_json_data("%s/%s" % (CMS_API_URL, voyage['id']))
+    voyage_detail_by_locale = {}
+
+    for locale, url in CMS_API_URLS.items():
+        # load all fields for the particular voyage by calling GET voyages/{id}
+        voyage_detail_by_locale[locale] = helpers.read_json_data("%s/%s" % (url, voyage_id))
+
+    default_voyage_detail = voyage_detail_by_locale[config.DEFAULT_LOCALE]
+
+    if default_voyage_detail is None:
+        logging.info('Could not find default voyage detail for voyage ID: %s' % voyage_id)
+        return
+
+    # Assuming that number of selling points is the same for every locale
+    usps = [
+        helpers.add_entry(
+            environment = contentful_environment,
+            id = "usp%s-%d" % (voyage_id, i),
+            content_type_id = "usp",
+            fields = helpers.merge_localized_dictionaries(*(
+                helpers.field_localizer(
+                    locale, {'text': locale_voyage_detail['sellingPoints'][i]}
+                )
+                for locale, locale_voyage_detail in voyage_detail_by_locale.items()
+            ))
+        ) for i, usp in enumerate(default_voyage_detail['sellingPoints'])
+    ]
+
+    # Assuming that media is same for every locale
+    media = [
+        helpers.add_asset(
+            environment = contentful_environment,
+            asset_uri = media_item['highResolutionUri'],
+            id = "voyagePicture%s-%d" % (voyage_id, i),
+            title = media_item['alternateText']
+        ) for i, media_item in enumerate(default_voyage_detail['mediaContent'])
+    ]
+
+    # Assuming that itinerary days are the same for every locale
+    itinerary = [
+        helpers.add_entry(
+            environment = contentful_environment,
+            id = "itday%s-%d" % (voyage_id, i),
+            content_type_id = "itineraryDay",
+            fields = helpers.merge_localized_dictionaries(*(
+                helpers.field_localizer(locale, {
+                    'day': locale_voyage_detail['itinerary'][i]['day'],
+                    'location': locale_voyage_detail['itinerary'][i]['location'],
+                    'name': locale_voyage_detail['itinerary'][i]['heading'],
+                    'description': helpers.convert_to_contentful_rich_text(
+                        locale_voyage_detail['itinerary'][i]['body']
+                    ),
+                    'images': [
+                        helpers.add_asset(
+                            environment = contentful_environment,
+                            asset_uri = media_item['highResolutionUri'],
+                            id = "itdpic%d-%s-%d" % (
+                                locale_voyage_detail['id'],
+                                helpers.camelize(locale_voyage_detail['itinerary'][i]['day']),
+                                k),
+                            title = media_item['alternateText']
+                        ) for k, media_item in enumerate(locale_voyage_detail['itinerary'][i]['mediaContent'])
+                    ]
+                }) for locale, locale_voyage_detail in voyage_detail_by_locale.items()
+            ))
+        ) for i, itinerary_day in enumerate(default_voyage_detail['itinerary'])
+    ]
 
     helpers.add_entry(
         environment = contentful_environment,
-        id = str(voyage_detail['id']),
+        id = str(voyage_id),
         content_type_id = "voyage",
-        fields = helpers.field_localizer('en-US', {
-            'name': voyage_detail['heading'],
-            'description': voyage_detail['intro'],
-            'included': helpers.convert_to_contentful_rich_text(voyage_detail['includedInfo']),
-            'notIncluded': helpers.convert_to_contentful_rich_text(voyage_detail['notIncludedInfo']),
-            'travelSuggestionCodes': voyage_detail['travelSuggestionCodes'],
-            'duration': voyage_detail['durationText'],
-            'destinations': [helpers.entry_link(voyage_detail['destinationId'])],
-            'fromPort': helpers.entry_link(voyage_detail['fromPort']),
-            'toPort': helpers.entry_link(voyage_detail['toPort']),
-            'notes': helpers.convert_to_contentful_rich_text(voyage_detail['notes']),
-            'usps': [
-                helpers.add_entry(
+        fields = helpers.merge_localized_dictionaries(*(
+            helpers.field_localizer(locale, {
+                'name': voyage_detail['heading'],
+                'description': voyage_detail['intro'],
+                'included': helpers.convert_to_contentful_rich_text(voyage_detail['includedInfo']),
+                'notIncluded': helpers.convert_to_contentful_rich_text(voyage_detail['notIncludedInfo']),
+                'travelSuggestionCodes': voyage_detail['travelSuggestionCodes'],
+                'duration': voyage_detail['durationText'],
+                'destinations': [helpers.entry_link(voyage_detail['destinationId'])],
+                'fromPort': helpers.entry_link(voyage_detail['fromPort']),
+                'toPort': helpers.entry_link(voyage_detail['toPort']),
+                'notes': helpers.convert_to_contentful_rich_text(voyage_detail['notes']),
+                'usps': usps,
+                'map': helpers.add_asset(  # assuming map can be different for different locales
                     environment = contentful_environment,
-                    id = "usp%d-%d" % (voyage_detail['id'], i),
-                    content_type_id = "usp",
-                    fields = helpers.field_localizer('en-US', {'text': usp})
-                ) for i, usp in enumerate(voyage_detail['sellingPoints'])
-            ],
-            'map': helpers.add_asset(
-                environment = contentful_environment,
-                asset_uri = voyage_detail['largeMap']['highResolutionUri'],
-                id = "voyageMap%d" % voyage_detail['id'],
-                title = voyage_detail['largeMap']['alternateText'],
-                file_name = voyage_detail['largeMap']['alternateText']
-            ),
-            'media': [
-                helpers.add_asset(
-                    environment = contentful_environment,
-                    asset_uri = media_item['highResolutionUri'],
-                    id = "voyagePicture%d-%d" % (voyage_detail['id'], i),
-                    title = media_item['alternateText']
-                ) for i, media_item in enumerate(voyage_detail['mediaContent'])
-            ],
-            'itinerary': [
-                helpers.add_entry(
-                    environment = contentful_environment,
-                    id = "itday%d-%d" % (voyage_detail['id'], i),
-                    content_type_id = "itineraryDay",
-                    fields = helpers.field_localizer('en-US', {
-                        'day': itinerary_day['day'],
-                        'location': itinerary_day['location'],
-                        'name': itinerary_day['heading'],
-                        'description': helpers.convert_to_contentful_rich_text(itinerary_day['body']),
-                        'images': [
-                            helpers.add_asset(
-                                environment = contentful_environment,
-                                asset_uri = media_item['highResolutionUri'],
-                                id = "itdpic%d-%s-%d" % (voyage_detail['id'], helpers.camelize(itinerary_day['day']), i),
-                                title = media_item['alternateText']
-                            ) for i, media_item in enumerate(itinerary_day['mediaContent'])
-                        ]
-                    })
-                ) for i, itinerary_day in enumerate(voyage_detail['itinerary'])
-            ]
-        })
+                    asset_uri = voyage_detail['largeMap']['highResolutionUri'],
+                    id = "voyageMap%d-%s" % (voyage_id, locale),
+                    title = voyage_detail['largeMap']['alternateText'],
+                    file_name = voyage_detail['largeMap']['alternateText']
+                ),
+                'media': media,
+                'itinerary': itinerary
+            }) for locale, voyage_detail in voyage_detail_by_locale.items()
+        ))
     )
 
-    logging.info('Voyage migration finished with ID: %s' % voyage['id'])
+    logging.info('Voyage migration finished with ID: %s' % voyage_id)
 
 
 def run_sync(**kwargs):
-    voyage_ids = kwargs.get('content_ids')
+    parameter_voyage_ids = kwargs.get('content_ids')
     include = kwargs.get('include')
-    if voyage_ids is not None:
+    if parameter_voyage_ids is not None:
         if include:
-            logging.info('Running voyages sync on specified IDs: %s' % voyage_ids)
+            logging.info('Running voyages sync on specified IDs: %s' % parameter_voyage_ids)
         else:
-            logging.info('Running voyages sync, skipping IDs: %s' % voyage_ids)
+            logging.info('Running voyages sync, skipping IDs: %s' % parameter_voyage_ids)
     else:
         logging.info('Running voyages sync')
-    voyages, contentful_environment = prepare_environment()
-    for voyage in voyages:
-        if voyage_ids is not None:
+    voyage_ids, contentful_environment = prepare_environment()
+    for voyage_id in voyage_ids:
+        if parameter_voyage_ids is not None:
             # run only included voyages
-            if include and voyage['id'] not in voyage_ids:
+            if include and voyage_id not in parameter_voyage_ids:
                 continue
             # skip excluded voyages
-            if not include and voyage['id'] in voyage_ids:
+            if not include and voyage_id in parameter_voyage_ids:
                 continue
-        update_voyage(contentful_environment, voyage)
+        try:
+            update_voyage(contentful_environment, voyage_id)
+        except Exception as e:
+            logging.error('Voyage migration error with ID: %s, error: %s' % (voyage_id, e))
 
 
 parser = ArgumentParser(prog = 'voyages.py', description = 'Run voyage sync between Contentful and EPI')
-parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide voyage IDs")
-parser.add_argument("-include", "--include", nargs='+', type=bool, help = "Specify if you want to include or exclude "
-                                                                         "voyage IDs")
+parser.add_argument("-ids", "--content_ids", nargs = '+', type = int, help = "Provide voyage IDs")
+parser.add_argument("-include", "--include", nargs = '?', type = helpers.str2bool, const=True, default=True,
+                    help = "Specify if you want to include or exclude "
+                           "voyage IDs")
 args = parser.parse_args()
 
 
 if __name__ == '__main__':
     ids = vars(args)['content_ids']
     include = vars(args)['include']
-    run_sync({"content_ids": ids, "include": include})
+    run_sync(**{"content_ids": ids, "include": include})
