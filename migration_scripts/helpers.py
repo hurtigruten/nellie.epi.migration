@@ -239,6 +239,8 @@ def add_asset(**kwargs):
     """
 
     # get asset base URI
+    logging.info('------------------------------------------')
+    logging.info('Original EPI URL: %s' % kwargs['asset_uri'])
     image_url = kwargs['asset_uri'].split('?')[0]
     if not image_url.startswith("http"):
         if image_url.startswith("/globalassets"):
@@ -247,6 +249,17 @@ def add_asset(**kwargs):
             image_url = "https:" + image_url
         if image_url.startswith("//global.hurtigruten.com"):
             image_url = "https:" + image_url
+        if image_url.startswith("//www.hurtigruten.co.uk"):
+            image_url = "https:" + image_url
+        if image_url.startswith("//www.hurtigruten.com.au"):
+            image_url = "https:" + image_url
+    if image_url.startswith('https://www.hurtigruten.com.auhttps://www.hurtigruten.co.uk'):
+        image_url = image_url.replace('https://www.hurtigruten.com.au', '')
+    if image_url.startswith('https://global.hurtigruten.comhttps://www.hurtigruten.co.uk'):
+        image_url = image_url.replace('https://global.hurtigruten.com', '')
+
+    logging.info('Fixed URL: %s' % image_url)
+    logging.info('------------------------------------------')
 
     id = kwargs['id'].replace("/", "")
 
