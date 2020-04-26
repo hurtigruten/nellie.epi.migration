@@ -34,6 +34,7 @@ def prepare_environment():
         config.CTFL_ENV_ID,
         config.CTFL_MGMT_API_KEY)
 
+    logging.info('Using Contentful environment: %s' % config.CTFL_ENV_ID)
     logging.info('Get all voyages for locales: %s' % (", ".join([key for key, value in CMS_API_URLS.items()])))
 
     voyage_ids = []
@@ -71,6 +72,16 @@ def update_voyage(contentful_environment, voyage_id):
         return
 
     # Assuming that number of selling points is the same for every locale
+    # Check if there's available usps for a given locale, and filter out locales which don't have any usps
+    voyage_detail_by_locale_usps = {}
+    usps_list = []
+    for locale, locale_voyage_detail in voyage_detail_by_locale.items():
+        if locale_voyage_detail['sellingPoints'] is None or locale_voyage_detail['sellingPoints'] == []:
+            logging.warning('USPs is not available in %s for %s' % (locale, voyage_id))
+        else:
+            voyage_detail_by_locale_usps[locale] = locale_voyage_detail
+            usps_list = locale_voyage_detail['sellingPoints']
+
     usps = [
         helpers.add_entry(
             environment = contentful_environment,
@@ -78,11 +89,13 @@ def update_voyage(contentful_environment, voyage_id):
             content_type_id = "usp",
             fields = helpers.merge_localized_dictionaries(*(
                 helpers.field_localizer(
-                    locale, {'text': locale_voyage_detail['sellingPoints'][i]}
+                    locale, {
+                        'text': locale_voyage_detail['sellingPoints'][i]
+                    }
                 )
-                for locale, locale_voyage_detail in voyage_detail_by_locale.items()
+                for locale, locale_voyage_detail in voyage_detail_by_locale_usps.items()
             ))
-        ) for i, usp in enumerate(default_voyage_detail['sellingPoints'])
+        ) for i, usp in enumerate(usps_list)
     ]
 
     # Assuming that media is same for every locale
@@ -96,6 +109,17 @@ def update_voyage(contentful_environment, voyage_id):
     ]
 
     # Assuming that itinerary days are the same for every locale
+
+    # Check if there's available itinerary for a given locale, and filter out locales which don't have any itineraries
+    voyage_detail_by_locale_itineraries = {}
+    itinerary_list = []
+    for locale, locale_voyage_detail in voyage_detail_by_locale.items():
+        if locale_voyage_detail['itinerary'] is None or locale_voyage_detail['itinerary'] == []:
+            logging.warning('Itinerary is not available in %s for %s' % (locale, voyage_id))
+        else:
+            voyage_detail_by_locale_itineraries[locale] = locale_voyage_detail
+            itinerary_list = locale_voyage_detail['itinerary']
+
     itinerary = [
         helpers.add_entry(
             environment = contentful_environment,
@@ -120,9 +144,9 @@ def update_voyage(contentful_environment, voyage_id):
                             title = media_item['alternateText']
                         ) for k, media_item in enumerate(locale_voyage_detail['itinerary'][i]['mediaContent'])
                     ]
-                }) for locale, locale_voyage_detail in voyage_detail_by_locale.items()
+                }) for locale, locale_voyage_detail in voyage_detail_by_locale_itineraries.items()
             ))
-        ) for i, itinerary_day in enumerate(default_voyage_detail['itinerary'])
+        ) for i, itinerary_day in enumerate(itinerary_list)
     ]
 
     helpers.add_entry(
@@ -148,7 +172,7 @@ def update_voyage(contentful_environment, voyage_id):
                     id = "voyageMap%d-%s" % (voyage_id, locale),
                     title = voyage_detail['largeMap']['alternateText'],
                     file_name = voyage_detail['largeMap']['alternateText']
-                ),
+                ) if voyage_detail['largeMap'] is not None else None,
                 'media': media,
                 'itinerary': itinerary
             }) for locale, voyage_detail in voyage_detail_by_locale.items()
@@ -185,11 +209,10 @@ def run_sync(**kwargs):
 
 parser = ArgumentParser(prog = 'voyages.py', description = 'Run voyage sync between Contentful and EPI')
 parser.add_argument("-ids", "--content_ids", nargs = '+', type = int, help = "Provide voyage IDs")
-parser.add_argument("-include", "--include", nargs = '?', type = helpers.str2bool, const=True, default=True,
+parser.add_argument("-include", "--include", nargs = '?', type = helpers.str2bool, const = True, default = True,
                     help = "Specify if you want to include or exclude "
                            "voyage IDs")
 args = parser.parse_args()
-
 
 if __name__ == '__main__':
     ids = vars(args)['content_ids']

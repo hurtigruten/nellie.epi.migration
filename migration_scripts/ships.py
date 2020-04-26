@@ -36,6 +36,7 @@ def prepare_environment():
         config.CTFL_MGMT_API_KEY
     )
 
+    logging.info('Using Contentful environment: %s' % config.CTFL_ENV_ID)
     logging.info('Get all ships from Contentful')
     contentful_ships = contentful_environment.entries().all(query = {"content_type": "ship"})
     logging.info('Number of ships in Contentful: %s' % len(contentful_ships))

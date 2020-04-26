@@ -27,6 +27,7 @@ def prepare_environment():
         config.CTFL_SPACE_ID,
         config.CTFL_ENV_ID,
         config.CTFL_MGMT_API_KEY)
+    logging.info('Using Contentful environment: %s' % config.CTFL_ENV_ID)
     return contentful_environment
 
 

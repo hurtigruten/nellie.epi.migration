@@ -47,6 +47,7 @@ def prepare_environment():
         config.CTFL_ENV_ID,
         config.CTFL_MGMT_API_KEY)
 
+    logging.info('Using Contentful environment: %s' % config.CTFL_ENV_ID)
     logging.info('Get all excursions for locales: %s' % (", ".join([key for key, value in CMS_API_URLS.items()])))
 
     excursion_ids = []
