@@ -77,7 +77,7 @@ def update_ship(contentful_environment, ship):
         ship.publish()
         logging.info("Ship %s image updated: %s" % (ship.name, image_id))
     except Exception as e:
-        logging.error('Ship could not be published: %s' % image_id)
+        logging.error('Ship image could not be published: %s' % image_id)
 
     # add cabin categories
     for cabinCategory in ship_data['cabinCategories']:
@@ -237,13 +237,16 @@ def run_sync(**kwargs):
             # skip excluded voyages
             if not include and ship.id in ship_ids:
                 continue
-        update_ship(contentful_environment, ship)
+        try:
+            update_ship(contentful_environment, ship)
+        except Exception as e:
+            logging.error('Ship migration error with ID: %s, error: %s' % (ship.id, e))
 
 
 parser = ArgumentParser(prog = 'ships.py', description = 'Run ship sync between Contentful and EPI')
 parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide ship IDs")
-parser.add_argument("-include", "--include", nargs='+', type=bool, help = "Specify if you want to include or exclude "
-                                                                         "ship IDs")
+parser.add_argument("-include", "--include", nargs='?', type=helpers.str2bool,
+                    help = "Specify if you want to include or exclude ship IDs")
 args = parser.parse_args()
 
 

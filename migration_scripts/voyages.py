@@ -210,9 +210,9 @@ def run_sync(**kwargs):
 parser = ArgumentParser(prog = 'voyages.py', description = 'Run voyage sync between Contentful and EPI')
 parser.add_argument("-ids", "--content_ids", nargs = '+', type = int, help = "Provide voyage IDs")
 parser.add_argument("-include", "--include", nargs = '?', type = helpers.str2bool, const = True, default = True,
-                    help = "Specify if you want to include or exclude "
-                           "voyage IDs")
+                    help = "Specify if you want to include or exclude voyage IDs")
 args = parser.parse_args()
+
 
 if __name__ == '__main__':
     ids = vars(args)['content_ids']
