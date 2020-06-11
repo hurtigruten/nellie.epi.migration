@@ -259,6 +259,8 @@ def add_asset(**kwargs):
         image_url = image_url.replace('https://global.hurtigruten.com', '')
     if image_url.startswith('https://global.hurtigruten.comhttps://global.hurtigruten.com'):
         image_url = image_url.replace('https://global.hurtigruten.comhttps://global.hurtigruten.com', 'https://global.hurtigruten.com')
+    if image_url.startswith('https://www.hurtigruten.comhttps://www.hurtigruten.com'):
+        image_url = image_url.replace('https://www.hurtigruten.comhttps://www.hurtigruten.com', 'https://www.hurtigruten.com')
 
     logging.info('Fixed URL: %s' % image_url)
     logging.info('------------------------------------------')
