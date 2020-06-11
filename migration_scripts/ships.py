@@ -86,7 +86,7 @@ def update_ship(contentful_environment, ship):
             environment = contentful_environment,
             id = cabinCategoryCode,
             content_type_id = "cabinCategory",
-            fields = helpers.field_localizer('en-US', {
+            fields = helpers.field_localizer(config.DEFAULT_LOCALE, {
                 'code': cabinCategoryCode,
                 'name': cabinCategory['title'],
                 'description': helpers.convert_to_contentful_rich_text(cabinCategory['description'])
@@ -107,7 +107,7 @@ def update_ship(contentful_environment, ship):
             environment = contentful_environment,
             id = "cabcatcont-%s-%s" % (ship.code, helpers.extract_first_letters(cabinCategory['title'])),
             content_type_id = "cabinCategoryContainer",
-            fields = helpers.field_localizer('en-US', {
+            fields = helpers.field_localizer(config.DEFAULT_LOCALE, {
                 'category': helpers.entry_link(cabCatId),
                 'media': [helpers.add_asset(
                     environment = contentful_environment,
@@ -122,7 +122,7 @@ def update_ship(contentful_environment, ship):
                             ship.code, helpers.extract_first_letters(cabinCategory['title']), cabinGrade['code']
                         ),
                         content_type_id = "cabinGrade",
-                        fields = helpers.field_localizer('en-US', {
+                        fields = helpers.field_localizer(config.DEFAULT_LOCALE, {
                             'code': cabinGrade['code'],
                             'name': cabinGrade['title'],
                             'shortDescription': helpers.convert_to_contentful_rich_text(cabinGrade['shortDescription']),
@@ -189,7 +189,7 @@ def update_ship(contentful_environment, ship):
             environment = contentful_environment,
             id = deck_plan_id,
             content_type_id = "deckPlan",
-            fields = helpers.field_localizer('en-US', {
+            fields = helpers.field_localizer(config.DEFAULT_LOCALE, {
                 "deck": deck_number,
                 "plan": helpers.add_asset(
                     environment = contentful_environment,

@@ -4,7 +4,7 @@ services:
   
   migration-to-contentful:
     build: migration_scripts
-    image: b2b-portal-migration-to-contentful:1.4.1
+    image: b2b-portal-migration-to-contentful:1.4.2
     restart: always
     environment:
       - SYNC_BASIC_AUTH_PASSWORD
