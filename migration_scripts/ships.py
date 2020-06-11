@@ -119,11 +119,11 @@ def update_ship(contentful_environment, ship):
                     helpers.add_entry(
                         environment = contentful_environment,
                         id = "cg-%s-%s-%s" % (
-                            ship.code, helpers.extract_first_letters(cabinCategory['title']), cabinGrade['code']
+                            ship.code, helpers.extract_first_letters(cabinCategory['title']), cabinGrade['code'].replace(' ', '')
                         ),
                         content_type_id = "cabinGrade",
                         fields = helpers.field_localizer(config.DEFAULT_LOCALE, {
-                            'code': cabinGrade['code'],
+                            'code': cabinGrade['code'].replace(' ', ''),
                             'name': cabinGrade['title'],
                             'shortDescription': helpers.convert_to_contentful_rich_text(cabinGrade['shortDescription']),
                             'longDescription': helpers.convert_to_contentful_rich_text(cabinGrade['longDescription']),
@@ -147,10 +147,10 @@ def update_ship(contentful_environment, ship):
                                 helpers.add_asset(
                                     environment = contentful_environment,
                                     asset_uri = image_url,
-                                    id = "shCabGr-%s-%s-%i" % (ship.code, cabinGrade['code'], i),
+                                    id = "shCabGr-%s-%s-%i" % (ship.code, cabinGrade['code'].replace(' ', ''), i),
                                     title = helpers.clean_asset_name(
                                         splitext(basename(urlparse(image_url).path))[0],
-                                        "shCabGr-%s-%s-%i" % (ship.code, cabinGrade['code'], i)
+                                        "shCabGr-%s-%s-%i" % (ship.code, cabinGrade['code'].replace(' ', ''), i)
                                     )
                                 )
                                 for i, image_url in enumerate(cabinGrade['cabinGradeImages'])]
