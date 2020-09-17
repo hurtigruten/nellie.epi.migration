@@ -26,8 +26,8 @@ app.post('/convert', asyncHandler(async (req, res, next) => {
     const from = req.body.from
     const to = req.body.to
     const markdown = req.body.markdown
-    const html = req.body.html.replace(/<a.*href="(.*?)".*>(.*?)<\/a>/gi, "$2")
-
+    const html = req.body.html.replace(/<a[^>]*href="(?!http|https|www)[^>]*>(.*?)<\/a>/gi, "$1")
+    
     switch (from) {
         case 'html':
             
