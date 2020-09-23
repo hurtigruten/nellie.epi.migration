@@ -311,3 +311,8 @@ dmypy.json
 .history
 
 # End of https://www.gitignore.io/api/node,python,intellij,visualstudiocode
+#
+agent-portal-translation/output/
+agent-portal-translation/contentful-export.json  
+agent-portal-translation/contentful-import.json
+agent-portal-translation/tmp.json
