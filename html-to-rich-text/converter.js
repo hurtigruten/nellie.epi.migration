@@ -26,8 +26,10 @@ app.post('/convert', asyncHandler(async (req, res, next) => {
     const from = req.body.from
     const to = req.body.to
     const markdown = req.body.markdown
-    const html = req.body.html.replace(/<a.*href="(.*?)".*>(.*?)<\/a>/gi, "$2")
-
+    //Regular expression which changed all relative URLs to a plain text. 
+    //The absoulte URLs aren't changed by this method.
+    const html = req.body.html.replace(/<a[^>]*href="(?!http|https|www)[^>]*>(.*?)<\/a>/gi, "$1")
+    
     switch (from) {
         case 'html':
             
