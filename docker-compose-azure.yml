@@ -21,7 +21,7 @@ services:
 
   html-to-rich-text:
     build: html-to-rich-text
-    image: b2bportalregistry.azurecr.io/b2b-portal-html-to-rich-text:latest
+    image: b2bportalregistry.azurecr.io/b2b-portal-html-to-rich-text:1.0.1
     networks:
       app_net:
         aliases:

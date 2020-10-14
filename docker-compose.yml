@@ -22,7 +22,7 @@ services:
 
   html-to-rich-text:
     build: html-to-rich-text
-    image: b2b-portal-html-to-rich-text:latest
+    image: b2b-portal-html-to-rich-text:1.0.1
     restart: always
     networks:
       app_net:
