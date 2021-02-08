@@ -24,6 +24,7 @@ CMS_API_URLS = {
     "en": "https://global.hurtigruten.com/rest/b2b/voyages",
     "EN-AMERICAS": "https://www.hurtigruten.com/rest/b2b/voyages",
     "EN-APAC": "https://www.hurtigruten.com.au/rest/b2b/voyages"
+    "de": "https://www.hurtigruten.de/rest/b2b/voyages"
 }
 
 
