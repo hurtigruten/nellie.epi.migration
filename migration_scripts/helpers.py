@@ -253,9 +253,13 @@ def add_asset(**kwargs):
             image_url = "https:" + image_url
         if image_url.startswith("//www.hurtigruten.com.au"):
             image_url = "https:" + image_url
+        if image_url.startswith("//www.hurtigruten.de"):
+            image_url = "https:" + image_url
     if image_url.startswith('https://www.hurtigruten.com.auhttps://www.hurtigruten.co.uk'):
         image_url = image_url.replace('https://www.hurtigruten.com.au', '')
     if image_url.startswith('https://global.hurtigruten.comhttps://www.hurtigruten.co.uk'):
+        image_url = image_url.replace('https://global.hurtigruten.com', '')
+    if image_url.startswith('https://global.hurtigruten.comhttps://www.hurtigruten.de'):
         image_url = image_url.replace('https://global.hurtigruten.com', '')
     if image_url.startswith('https://global.hurtigruten.comhttps://global.hurtigruten.com'):
         image_url = image_url.replace('https://global.hurtigruten.comhttps://global.hurtigruten.com', 'https://global.hurtigruten.com')
