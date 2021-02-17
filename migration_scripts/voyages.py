@@ -144,7 +144,14 @@ def update_voyage(contentful_environment, voyage_id):
                                 k),
                             title = media_item['alternateText']
                         ) for k, media_item in enumerate(locale_voyage_detail['itinerary'][i]['mediaContent'])
-                    ]
+                    ],
+                    'excursions': [
+                        helpers.entry_link(
+                            excursion_id
+                        ) for excursion_id in locale_voyage_detail['itinerary'][i]['includedExcursions']
+                    ],
+                    'departureTime': locale_voyage_detail['itinerary'][i]['departureTime'],
+                    'arrivalTime': locale_voyage_detail['itinerary'][i]['arrivalTime'],
                 }) for locale, locale_voyage_detail in voyage_detail_by_locale_itineraries.items()
             ))
         ) for i, itinerary_day in enumerate(itinerary_list)
