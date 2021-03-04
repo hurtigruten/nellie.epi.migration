@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_executor import Executor
-from helpers import IntListConverter
+from helpers import IntListConverter, create_lookup_dictionary
 from helpers import ListConverter
 from flask_basicauth import BasicAuth
 import os
@@ -10,14 +10,12 @@ import voyages
 import ships
 import publish_imported_assets
 
-
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
     level = logging.INFO,
     datefmt = '%Y-%m-%d %H:%M:%S')
 
 app = Flask(__name__)
-
 app.config['BASIC_AUTH_USERNAME'] = os.environ['SYNC_BASIC_AUTH_USER']
 app.config['BASIC_AUTH_PASSWORD'] = os.environ['SYNC_BASIC_AUTH_PASSWORD']
 app.config['EXECUTOR_TYPE'] = 'thread'
@@ -27,7 +25,9 @@ app.config['BASIC_AUTH_FORCE'] = True
 app.url_map.converters['int_list'] = IntListConverter
 app.url_map.converters['list'] = ListConverter
 
+
 basic_auth = BasicAuth(app)
+
 
 @app.route('/sync/excursions/')
 @app.route('/sync/excursions')
@@ -129,6 +129,7 @@ def sync_and_publish_all():
 
 def start_task_executor_if_available(*task_and_parameters):
     global running_tasks
+    create_lookup_dictionary()
     if running_tasks == 0:
         running_tasks += 1
         logging.info('Running tasks: %s' % running_tasks)

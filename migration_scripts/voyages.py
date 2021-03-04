@@ -8,11 +8,14 @@ that has been previously linked to the old imported voyage and thus have the sam
 deleted and re-imported.
 
 """
+import csv
 
 import config
 import helpers
 import logging
+import json
 from argparse import ArgumentParser
+
 
 logging.basicConfig(
     format = '%(asctime)s %(levelname)-8s %(message)s',
@@ -39,14 +42,18 @@ def prepare_environment():
     logging.info('Get all voyages for locales: %s' % (", ".join([key for key, value in CMS_API_URLS.items()])))
 
     voyage_ids = []
+    epi_voyage_ids = []
     for key, value in CMS_API_URLS.items():
-        voyage_ids += [voyage['id'] for voyage in helpers.read_json_data(value)]
+        voyage_ids += [voyage['id'] for voyage in helpers.read_json_data(value) if helpers.skip_entry_if_not_updated(voyage, key, voyage['id'])]
+        epi_voyage_ids += [voyage['id'] for voyage in helpers.read_json_data(value)]
 
     # Create distinct list
     voyage_ids = set(voyage_ids)
+    epi_voyage_ids = set(epi_voyage_ids)
 
-    logging.info('Number of voyages in EPI: %s' % len(voyage_ids))
+    logging.info('Number of voyages in EPI: %s' % len(epi_voyage_ids))
     logging.info('')
+    logging.info('Number of voyages changed: %s' % len(voyage_ids))
     logging.info('-----------------------------------------------------')
     logging.info('Voyage IDs to migrate: ')
     for voyage_id in voyage_ids:
@@ -187,6 +194,9 @@ def update_voyage(contentful_environment, voyage_id):
         ))
     )
 
+    for locale, url in CMS_API_URLS.items():
+        helpers.update_entry_database(voyage_id, locale)
+
     logging.info('Voyage migration finished with ID: %s' % voyage_id)
 
 
@@ -196,6 +206,7 @@ def run_sync(**kwargs):
     if parameter_voyage_ids is not None:
         if include:
             logging.info('Running voyages sync on specified IDs: %s' % parameter_voyage_ids)
+            [helpers.prepare_included_environment(parameter_voyage_ids, locale) for locale, url in CMS_API_URLS.items()]
         else:
             logging.info('Running voyages sync, skipping IDs: %s' % parameter_voyage_ids)
     else:
@@ -213,6 +224,7 @@ def run_sync(**kwargs):
             update_voyage(contentful_environment, voyage_id)
         except Exception as e:
             logging.error('Voyage migration error with ID: %s, error: %s' % (voyage_id, e))
+            [helpers.remove_entry_id_from_memory(voyage_id, locale) for locale, url in CMS_API_URLS.items()]
 
 
 parser = ArgumentParser(prog = 'voyages.py', description = 'Run voyage sync between Contentful and EPI')

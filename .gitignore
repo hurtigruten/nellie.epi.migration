@@ -218,6 +218,7 @@ parts/
 sdist/
 var/
 wheels/
+venv/
 pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
@@ -316,3 +317,6 @@ agent-portal-translation/output/
 agent-portal-translation/contentful-export.json  
 agent-portal-translation/contentful-import.json
 agent-portal-translation/tmp.json
+
+migration_scrips/venv
+env_dev

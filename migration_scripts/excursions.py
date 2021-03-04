@@ -52,10 +52,13 @@ def prepare_environment():
     logging.info('Get all excursions for locales: %s' % (", ".join([key for key, value in CMS_API_URLS.items()])))
 
     excursion_ids = []
+    epi_excursion_ids = []
 
     for locale, url in CMS_API_URLS.items():
         excursions_by_locale[locale] = helpers.read_json_data(url)
-        excursion_ids += [excursion['id'] for excursion in excursions_by_locale[locale]]
+        excursion_ids += [excursion['id'] for excursion in excursions_by_locale[locale] if
+                          helpers.skip_entry_if_not_updated(excursion, locale, excursion['id'])]
+        epi_excursion_ids += [excursion['id'] for excursion in excursions_by_locale[locale]]
         logging.info(
             'Number of excursions in EPI: %s for locale: %s' % (len(excursions_by_locale[locale]), locale))
 
@@ -64,8 +67,9 @@ def prepare_environment():
 
     # Create distinct list
     excursion_ids = set(excursion_ids)
+    epi_excursion_ids = set(epi_excursion_ids)
 
-    logging.info('Number of migrating excursions: %s' % len(excursion_ids))
+    logging.info('Number of migrating excursions: %s' % len(epi_excursion_ids))
     logging.info('')
 
     logging.info('Excursion IDs to migrate: ')
@@ -124,6 +128,9 @@ def update_excursion(contentful_environment, excursion_id):
         ))
     )
 
+    for locale, url in CMS_API_URLS.items():
+        helpers.update_entry_database(excursion_id, locale)
+
     logging.info('Excursion migration finished with ID: %s' % excursion_id)
 
 
@@ -133,6 +140,8 @@ def run_sync(**kwargs):
     if parameter_excursion_ids is not None:
         if include:
             logging.info('Running excursion sync on specified IDs: %s' % parameter_excursion_ids)
+            [helpers.prepare_included_environment(parameter_excursion_ids, locale) for locale, url in
+             CMS_API_URLS.items()]
         else:
             logging.info('Running excursion sync, skipping IDs: %s' % parameter_excursion_ids)
     else:
@@ -150,6 +159,7 @@ def run_sync(**kwargs):
             update_excursion(contentful_environment, excursion_id)
         except Exception as e:
             logging.error('Excursion migration error with ID: %s, error: %s' % (excursion_id, e))
+            [helpers.remove_entry_id_from_memory(excursion_id, locale) for locale, url in CMS_API_URLS.items()]
 
 
 parser = ArgumentParser(prog = 'excursions.py', description = 'Run excursion sync between Contentful and EPI')

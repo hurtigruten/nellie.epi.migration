@@ -3,3 +3,4 @@ Flask==1.1.1
 Flask-Executor==0.9.3
 Flask-RESTful==0.3.7
 Flask-BasicAuth==0.2.0
+azure-cosmos==4.2.0
