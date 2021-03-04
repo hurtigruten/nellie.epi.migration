@@ -11,17 +11,27 @@ from urllib.parse import urlparse
 from os.path import splitext, basename
 from datetime import datetime
 from werkzeug.routing import BaseConverter
+from azure.cosmos import CosmosClient
+import zlib
+
+url = os.environ['COSMOS_AZURE_URI']
+key = os.environ['COSMOS_AZURE_KEY']
+client = CosmosClient(url, credential=key)
+database_name = os.environ['COSMOS_DATABASE_NAME']
+database = client.get_database_client(database_name)
+container_name = os.environ['COSMOS_CONTAINER_NAME']
+container = database.get_container_client(container_name)
 
 logging.basicConfig(
-    format = '%(asctime)s %(levelname)-8s %(message)s',
-    level = logging.INFO,
-    datefmt = '%Y-%m-%d %H:%M:%S')
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 
 def read_json_data(url):
     """Read JSON data from URL"""
 
-    req = Request(url, headers = {'User-Agent': 'Mozilla/5.0'})
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     response = urlopen(req).read()
     return json.loads(response)
 
@@ -81,10 +91,10 @@ def add_entry_with_code_if_not_exist(environment, content_type_id, entry_id):
         return entry_link(entry_id)
 
     return add_entry(
-        environment = environment,
-        id = entry_id,
-        content_type_id = content_type_id,
-        fields = field_localizer(config.DEFAULT_LOCALE, {
+        environment=environment,
+        id=entry_id,
+        content_type_id=content_type_id,
+        fields=field_localizer(config.DEFAULT_LOCALE, {
             'code': entry_id
         })
     )
@@ -114,11 +124,60 @@ def delete_content_type_and_associated_content(environment, content_type_id):
 def delete_content_of_type(environment, content_type_id):
     """Delete all content of particular type"""
 
-    entries = environment.entries().all(query = {
+    entries = environment.entries().all(query={
         "content_type": content_type_id
     })
     for entry in entries:
         delete_entry_if_exists(environment, entry.sys['id'])
+
+
+prev = {}
+
+
+def create_lookup_dictionary():
+    if len(prev) < 2:
+        logging.info("Getting previous updates")
+        for item in container.query_items(
+                query='SELECT * FROM entries',
+                enable_cross_partition_query=True):
+            prev[item['id']] = item['value']
+        logging.info(prev)
+
+
+def create_lookup_id(id, region):
+    return "" + str(id) + region
+
+
+def update_entry_database(id, region):
+    entry_id = create_lookup_id(id, region)
+    crc = prev[entry_id]
+    container.upsert_item({
+            'id': entry_id,
+            'value': crc,
+        }
+    )
+
+
+def remove_entry_id_from_memory(id, region):
+    entry_id = create_lookup_id(id, region)
+    if entry_id in prev:
+        del prev[entry_id]
+
+
+def prepare_included_environment(included_entries, region):
+    for entry in included_entries:
+        remove_entry_id_from_memory(entry, region)
+
+
+def skip_entry_if_not_updated(entry, region, skip_id):
+    entry_id = create_lookup_id(skip_id, region)
+    byte_entry = str(entry).encode()
+    crc = zlib.crc32(byte_entry)
+    if entry_id in prev and crc == prev[entry_id]:
+        return False
+    else:
+        prev[entry_id] = crc
+        return True
 
 
 def delete_entry_if_exists(environment, entry_id):
@@ -262,9 +321,11 @@ def add_asset(**kwargs):
     if image_url.startswith('https://global.hurtigruten.comhttps://www.hurtigruten.de'):
         image_url = image_url.replace('https://global.hurtigruten.com', '')
     if image_url.startswith('https://global.hurtigruten.comhttps://global.hurtigruten.com'):
-        image_url = image_url.replace('https://global.hurtigruten.comhttps://global.hurtigruten.com', 'https://global.hurtigruten.com')
+        image_url = image_url.replace('https://global.hurtigruten.comhttps://global.hurtigruten.com',
+                                      'https://global.hurtigruten.com')
     if image_url.startswith('https://www.hurtigruten.comhttps://www.hurtigruten.com'):
-        image_url = image_url.replace('https://www.hurtigruten.comhttps://www.hurtigruten.com', 'https://www.hurtigruten.com')
+        image_url = image_url.replace('https://www.hurtigruten.comhttps://www.hurtigruten.com',
+                                      'https://www.hurtigruten.com')
 
     logging.info('Fixed URL: %s' % image_url)
     logging.info('------------------------------------------')
@@ -308,7 +369,7 @@ def add_asset(**kwargs):
         contentful_image_bytes = 0
 
         if asset_file is not None and asset_url is not None:
-            resp = requests.get("http:" + asset_url, stream = True)
+            resp = requests.get("http:" + asset_url, stream=True)
             contentful_image_bytes = resp.headers['Content-length']
             resp.close()
         else:
@@ -343,10 +404,10 @@ def add_asset(**kwargs):
             logging.error('Exception occurred while fetching image for asset with ID: %s, error: %s ' % (id, e))
             return e
 
-    assets = kwargs['environment'].assets().all(query = {'fields.file.details.size': asset_size})
+    assets = kwargs['environment'].assets().all(query={'fields.file.details.size': asset_size})
 
     for asset in assets:
-        resp = requests.get(image_url, stream = True)
+        resp = requests.get(image_url, stream=True)
         image_bytes = resp.content
         resp.close()
 
@@ -364,7 +425,7 @@ def add_asset(**kwargs):
 
         contentful_image_bytes = 0
         if asset_file is not None and asset_url is not None:
-            resp = requests.get("http:" + asset_url, stream = True)
+            resp = requests.get("http:" + asset_url, stream=True)
             contentful_image_bytes = resp.content
             resp.close()
         else:
@@ -418,7 +479,7 @@ def add_asset(**kwargs):
 def get_asset_size(uri):
     """Return asset size if possible to read by image URI, otherwise return 0"""
 
-    resp = requests.get(uri, stream = True)
+    resp = requests.get(uri, stream=True)
 
     img_to_add_content_type = resp.headers['Content-type']
     if 'content-length' in resp.headers:
@@ -431,7 +492,7 @@ def get_asset_size(uri):
 def get_asset_type_and_size(uri):
     """Return asset type and size if possible to read by image URI, otherwise return 0"""
 
-    resp = requests.get(uri, stream = True)
+    resp = requests.get(uri, stream=True)
 
     img_to_add_content_type = resp.headers['Content-type']
     if 'content-length' in resp.headers:

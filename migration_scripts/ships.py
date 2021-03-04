@@ -39,15 +39,20 @@ def prepare_environment():
     logging.info('Using Contentful environment: %s' % config.CTFL_ENV_ID)
     logging.info('Get all ships from Contentful')
     contentful_ships = contentful_environment.entries().all(query = {"content_type": "ship"})
+    changed_contentful_ships = [ship for ship in contentful_ships if
+                                helpers.skip_entry_if_not_updated(helpers.read_json_data(
+                                    "%s/%s" % ("https://www.hurtigruten.com/rest/b2b/ships", ship.code)), 'en',
+                                                                  ship.id)]
     logging.info('Number of ships in Contentful: %s' % len(contentful_ships))
     logging.info('')
+    logging.info('Number of ships changed: %s' % len(changed_contentful_ships))
     logging.info('-----------------------------------------------------')
     logging.info('Ship IDs to migrate: ')
-    for ship in contentful_ships:
+    for ship in changed_contentful_ships:
         logging.info(ship.id)
     logging.info('-----------------------------------------------------')
     logging.info('')
-    return contentful_ships, contentful_environment
+    return changed_contentful_ships, contentful_environment
 
 
 def update_ship(contentful_environment, ship):
@@ -217,6 +222,8 @@ def update_ship(contentful_environment, ship):
         except Exception as e:
             logging.error('Could not publish ship deck plans with name: %s, error: %s' % (ship.name, e))
 
+    if is_deck_plans_updated and is_links_updated:
+        helpers.update_entry_database(ship.id, 'en')
 
 def run_sync(**kwargs):
     ship_ids = kwargs.get('content_ids')
@@ -224,6 +231,7 @@ def run_sync(**kwargs):
     if ship_ids is not None:
         if include:
             logging.info('Running ship sync on specified IDs: %s' % ship_ids)
+            helpers.prepare_included_environment(ship_ids, 'en')
         else:
             logging.info('Running ship sync, skipping IDs: %s' % ship_ids)
     else:
@@ -241,6 +249,7 @@ def run_sync(**kwargs):
             update_ship(contentful_environment, ship)
         except Exception as e:
             logging.error('Ship migration error with ID: %s, error: %s' % (ship.id, e))
+            helpers.remove_entry_id_from_memory(ship.id, 'en')
 
 
 parser = ArgumentParser(prog = 'ships.py', description = 'Run ship sync between Contentful and EPI')

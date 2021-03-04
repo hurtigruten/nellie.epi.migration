@@ -3,7 +3,7 @@ version: "3.1"
 services:
   migration-to-contentful:
     build: migration_scripts
-    image: b2b-portal-migration-to-contentful:1.4.8
+    image: b2b-portal-migration-to-contentful:2.1.2
     restart: always
     environment:
       - SYNC_BASIC_AUTH_PASSWORD
@@ -15,6 +15,10 @@ services:
       - SYNC_DEBUG
       - SYNC_RICH_TEXT_CONVERTER_URL
       - SYNC_CONTENTFUL_DEFAULT_LOCALE
+      - COSMOS_AZURE_KEY
+      - COSMOS_AZURE_URI
+      - COSMOS_DATABASE_NAME
+      - COSMOS_CONTAINER_NAME
     networks:
       - app_net
     ports:

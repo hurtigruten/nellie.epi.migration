@@ -1,12 +1,10 @@
-version: '3.1'
+version: "3.1"
 
 services:
-
   migration-to-contentful:
     build: migration_scripts
     image: b2bportalregistry.azurecr.io/b2b-portal-migration-to-contentful:1.4.6
-    environment:
-      SYNC_BASIC_AUTH_PASSWORD
+    environment: SYNC_BASIC_AUTH_PASSWORD
       SYNC_BASIC_AUTH_USER
       SYNC_CONTENTFUL_API_KEY
       SYNC_CONTENTFUL_ENVIRONMENT
@@ -14,6 +12,10 @@ services:
       SYNC_HOST
       SYNC_DEBUG
       SYNC_RICH_TEXT_CONVERTER_URL
+      COSMOS_AZURE_KEY
+      COSMOS_AZURE_URI
+      COSMOS_DATABASE_NAME
+      COSMOS_CONTAINER_NAME
     networks:
       - app_net
     ports:
