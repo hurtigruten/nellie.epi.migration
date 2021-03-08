@@ -158,7 +158,7 @@ def update_voyage(contentful_environment, voyage_id):
                         ) for excursion_id in locale_voyage_detail['itinerary'][i]['includedExcursions']
                     ],
                     'departureTime': locale_voyage_detail['itinerary'][i]['departureTime'],
-                    'arrivalTime': locale_voyage_detail['itinerary'][i]['arrivalTime'],
+                    'arrivalTime': locale_voyage_detail['itinerary'][i]['arrivalTime']
                 }) for locale, locale_voyage_detail in voyage_detail_by_locale_itineraries.items()
             ))
         ) for i, itinerary_day in enumerate(itinerary_list)
@@ -180,6 +180,8 @@ def update_voyage(contentful_environment, voyage_id):
                 'fromPort': helpers.entry_link(voyage_detail['fromPort']),
                 'toPort': helpers.entry_link(voyage_detail['toPort']),
                 'notes': helpers.convert_to_contentful_rich_text(voyage_detail['notes']),
+                'shortDescription': voyage_detail['itineraryOneLiner'],
+                'longDescription': helpers.convert_to_contentful_rich_text(voyage_detail['itineraryIntro']),
                 'usps': usps,
                 'map': helpers.add_asset(  # assuming map can be different for different locales
                     environment = contentful_environment,
