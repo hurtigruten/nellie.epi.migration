@@ -180,7 +180,7 @@ def update_voyage(contentful_environment, voyage_id):
                 'fromPort': helpers.entry_link(voyage_detail['fromPort']),
                 'toPort': helpers.entry_link(voyage_detail['toPort']),
                 'notes': helpers.convert_to_contentful_rich_text(voyage_detail['notes']),
-                'shortDescription': voyage_detail['itineraryOneLiner'],
+                'shortDescription': helpers.convert_to_contentful_rich_text(voyage_detail['itineraryOneLiner']),
                 'longDescription': helpers.convert_to_contentful_rich_text(voyage_detail['itineraryIntro']),
                 'usps': usps,
                 'map': helpers.add_asset(  # assuming map can be different for different locales

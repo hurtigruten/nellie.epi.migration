@@ -106,13 +106,9 @@ def update_excursion(contentful_environment, excursion_id):
             helpers.field_localizer(locale, {
                 'name': excursion['title'],
                 'description': helpers.convert_to_contentful_rich_text(excursion['summary']),
-                'categories': [category['text'] for category in excursion['activityCategory']
-                               if category['id'] is not "0"],
                 'years': [year['id'] for year in excursion['years']],
                 'seasons': [season_dict[season['id']] for season in excursion['seasons']],
                 'location': excursion['details'],
-                'directions': [direction['text'].split(' ', 1)[0] for direction in
-                               excursion['directions']],
                 'duration': excursion['durationText'],
                 'difficulty': difficulty_dict[excursion['physicalLevel'][0]['id']],
                 'bookingCode': excursion['code'],
