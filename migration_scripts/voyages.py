@@ -9,7 +9,6 @@ deleted and re-imported.
 
 """
 import csv
-
 import config
 import helpers
 import logging
@@ -27,7 +26,8 @@ CMS_API_URLS = {
     "EN-AMERICAS": "https://www.hurtigruten.com/rest/b2b/voyages",
     "EN-APAC": "https://www.hurtigruten.com.au/rest/b2b/voyages",
     "de": "https://www.hurtigruten.de/rest/b2b/voyages",
-    "en-GB": "https://www.hurtigruten.co.uk/rest/b2b/voyages"
+    "en-GB": "https://www.hurtigruten.co.uk/rest/b2b/voyages",
+    "de-CH": "https://www.hurtigruten.ch/rest/b2b/voyages"
 }
 
 
