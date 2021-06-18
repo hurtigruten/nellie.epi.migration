@@ -564,6 +564,10 @@ def field_localizer(locale, field_dict):
         d[key] = {
             locale: value
         }
+        if locale == 'en' and key == 'travelSuggestionCodes':
+            d[key] = {
+                'en-EU': value
+            }
     return d
 
 
