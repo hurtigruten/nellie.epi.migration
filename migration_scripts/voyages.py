@@ -27,7 +27,10 @@ CMS_API_URLS = {
     "EN-APAC": "https://www.hurtigruten.com.au/rest/b2b/voyages",
     "de": "https://www.hurtigruten.de/rest/b2b/voyages",
     "en-GB": "https://www.hurtigruten.co.uk/rest/b2b/voyages",
-    "de-CH": "https://www.hurtigruten.ch/rest/b2b/voyages"
+    "de-CH": "https://www.hurtigruten.ch/rest/b2b/voyages",
+    "sv-SE": "https://www.hurtigrutenresan.se/rest/b2b/voyages",
+    "nb-NO": "https://www.hurtigruten.no/rest/b2b/voyages",
+    "da-DK": "https://www.hurtigruten.dk/rest/b2b/voyages"
 }
 
 
@@ -108,13 +111,21 @@ def update_voyage(contentful_environment, voyage_id):
 
     # Assuming that media is same for every locale
     media = [
-        helpers.add_asset(
+        helpers.add_or_reuse_asset(
             environment = contentful_environment,
             asset_uri = media_item['highResolutionUri'],
-            id = "voyagePicture%s-%d" % (voyage_id, i),
+            id = media_item['id'],
             title = media_item['alternateText']
         ) for i, media_item in enumerate(default_voyage_detail['mediaContent'])
     ]
+
+    map = helpers.add_or_reuse_asset(
+        environment=contentful_environment,
+        asset_uri=default_voyage_detail['largeMap']['highResolutionUri'],
+        id=default_voyage_detail['largeMap']['id'].replace(':', '-'),
+        title=default_voyage_detail['largeMap']['alternateText'],
+        file_name=default_voyage_detail['largeMap']['alternateText']
+    ) if default_voyage_detail['largeMap'] is not None else None
 
     # Assuming that itinerary days are the same for every locale
 
@@ -142,13 +153,10 @@ def update_voyage(contentful_environment, voyage_id):
                         locale_voyage_detail['itinerary'][i]['body']
                     ),
                     'images': [
-                        helpers.add_asset(
+                        helpers.add_or_reuse_asset(
                             environment = contentful_environment,
                             asset_uri = media_item['highResolutionUri'],
-                            id = "itdpic%d-%s-%d" % (
-                                locale_voyage_detail['id'],
-                                helpers.camelize(locale_voyage_detail['itinerary'][i]['day']),
-                                k),
+                            id = media_item['id'],
                             title = media_item['alternateText']
                         ) for k, media_item in enumerate(locale_voyage_detail['itinerary'][i]['mediaContent'])
                     ],
@@ -163,7 +171,6 @@ def update_voyage(contentful_environment, voyage_id):
             ))
         ) for i, itinerary_day in enumerate(itinerary_list)
     ]
-
 
 
     helpers.add_entry(
@@ -185,13 +192,7 @@ def update_voyage(contentful_environment, voyage_id):
                 'shortDescription': helpers.convert_to_contentful_rich_text(voyage_detail['itineraryOneLiner']),
                 'longDescription': helpers.convert_to_contentful_rich_text(voyage_detail['itineraryIntro']),
                 'usps': usps,
-                'map': helpers.add_asset(  # assuming map can be different for different locales
-                    environment = contentful_environment,
-                    asset_uri = voyage_detail['largeMap']['highResolutionUri'],
-                    id = "voyageMap%d-%s" % (voyage_id, locale),
-                    title = voyage_detail['largeMap']['alternateText'],
-                    file_name = voyage_detail['largeMap']['alternateText']
-                ) if voyage_detail['largeMap'] is not None else None,
+                'map': map,
                 'media': media,
                 'itinerary': itinerary
             }) for locale, voyage_detail in voyage_detail_by_locale.items()

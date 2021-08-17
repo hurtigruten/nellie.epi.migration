@@ -276,6 +276,84 @@ def clean_asset_name(name, asset_id):
         .replace('.SVG', ' ') \
         .strip() if name is not None else name
 
+def add_or_reuse_asset(**kwargs):
+    environment = kwargs['environment']
+    id = kwargs['id']
+    if not is_asset_exists(environment, id):
+        create_asset(
+            environment=kwargs['environment'],
+            asset_uri=kwargs['asset_uri'],
+            id=kwargs['id'],
+            title=kwargs['title'])
+    return asset_link(id)
+
+def create_asset(**kwargs):
+    image_url = kwargs['asset_uri'].split('?')[0]
+    id = kwargs['id']
+    if not image_url.startswith("http"):
+        if image_url.startswith("/globalassets"):
+            image_url = "https://www.hurtigruten.com" + image_url
+        if image_url.startswith("//www.hurtigruten.com"):
+            image_url = "https:" + image_url
+        if image_url.startswith("//global.hurtigruten.com"):
+            image_url = "https:" + image_url
+        if image_url.startswith("//www.hurtigruten.co.uk"):
+            image_url = "https:" + image_url
+        if image_url.startswith("//www.hurtigruten.com.au"):
+            image_url = "https:" + image_url
+        if image_url.startswith("//www.hurtigruten.de"):
+            image_url = "https:" + image_url
+    if image_url.startswith('https://www.hurtigruten.com.auhttps://www.hurtigruten.co.uk'):
+        image_url = image_url.replace('https://www.hurtigruten.com.au', '')
+    if image_url.startswith('https://global.hurtigruten.comhttps://www.hurtigruten.co.uk'):
+        image_url = image_url.replace('https://global.hurtigruten.com', '')
+    if image_url.startswith('https://global.hurtigruten.comhttps://www.hurtigruten.de'):
+        image_url = image_url.replace('https://global.hurtigruten.com', '')
+    if image_url.startswith('https://global.hurtigruten.comhttps://global.hurtigruten.com'):
+        image_url = image_url.replace('https://global.hurtigruten.comhttps://global.hurtigruten.com',
+                                      'https://global.hurtigruten.com')
+    if image_url.startswith('https://www.hurtigruten.comhttps://www.hurtigruten.com'):
+        image_url = image_url.replace('https://www.hurtigruten.comhttps://www.hurtigruten.com',
+                                      'https://www.hurtigruten.com')
+    name = '%s%s' % splitext(basename(urlparse(image_url).path))
+    asset_type, asset_size = get_asset_type_and_size(image_url)
+    asset_attributes = {
+        'fields': {
+            "title": {
+                config.DEFAULT_LOCALE: clean_asset_name(name, id)
+            },
+            'file': {
+                config.DEFAULT_LOCALE: {
+                    'fileName': name,
+                    'upload': image_url,
+                    'contentType': asset_type
+                }
+            }
+        }
+    }
+
+    try:
+        kwargs['environment'].assets().create(id, asset_attributes)
+    except Exception as e:
+        logging.error('Exception occurred while creating asset with ID: %s, error: %s' % (id, e))
+        return e
+
+    try:
+        asset = kwargs['environment'].assets().find(id)
+    except Exception as e:
+        logging.error('Exception occurred while finding asset with ID: %s, error: %s' % (id, e))
+        return e
+
+    try:
+        asset.process()
+    except Exception as e:
+        logging.error('Exception occurred while processing asset with ID: %s, error: %s' % (id, e))
+        return e
+
+    logging.info('Asset added: %s' % id)
+
+    return asset_link(id)
+
 
 def add_asset(**kwargs):
     """
