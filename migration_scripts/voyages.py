@@ -30,7 +30,8 @@ CMS_API_URLS = {
     "de-CH": "https://www.hurtigruten.ch/rest/b2b/voyages",
     "sv-SE": "https://www.hurtigrutenresan.se/rest/b2b/voyages",
     "nb-NO": "https://www.hurtigruten.no/rest/b2b/voyages",
-    "da-DK": "https://www.hurtigruten.dk/rest/b2b/voyages"
+    "da-DK": "https://www.hurtigruten.dk/rest/b2b/voyages",
+    "fr-FR": "https://www.hurtigruten.fr/rest/b2b/voyages"
 }
 
 
