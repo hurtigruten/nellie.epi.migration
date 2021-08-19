@@ -192,6 +192,7 @@ def update_voyage(contentful_environment, voyage_id):
                 'notes': helpers.convert_to_contentful_rich_text(voyage_detail['notes']),
                 'shortDescription': helpers.convert_to_contentful_rich_text(voyage_detail['itineraryOneLiner']),
                 'longDescription': helpers.convert_to_contentful_rich_text(voyage_detail['itineraryIntro']),
+                'isViaKirkenes': helpers.entry_link(voyage_detail['isViaKirkenes']),
                 'usps': usps,
                 'map': map,
                 'media': media,
