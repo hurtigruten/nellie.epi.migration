@@ -2,6 +2,8 @@
 
 Contains 2 service combined in a Docker compose container.
 
+Before start make sure you have [Docker](https://docs.docker.com/get-docker/) installed on your machine.
+
 Build the services with `docker-compose build`
 Run the services with `docker-compose up`
 
@@ -21,8 +23,22 @@ SYNC_CONTENTFUL_SPACE_ID
 SYNC_DEBUG
 SYNC_HOST
 SYNC_RICH_TEXT_CONVERTER_URL
+SYNC_CONTENTFUL_DEFAULT_LOCAL
 ```
 These values can be added / modified in Azure's container configuration.
+
+### Running new changes.
+
+After updating the script and pushing it to Azure. Run the service locally:
+```
+docker-compose up
+```
+Which will run both Rich Text and new migrated version.
+
+### Testing in Postman
+
+Use the service started on port:NNNN returned after running `docker-compose up`.
+Make sure you're not runninng middleware locally on the same port otherwise the requests won't work.
 
 ## HTML to Rich Text Converter
 
