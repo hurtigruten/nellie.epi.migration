@@ -192,6 +192,8 @@ def update_voyage(contentful_environment, voyage_id):
                 'notes': helpers.convert_to_contentful_rich_text(voyage_detail['notes']),
                 'shortDescription': helpers.convert_to_contentful_rich_text(voyage_detail['itineraryOneLiner']),
                 'longDescription': helpers.convert_to_contentful_rich_text(voyage_detail['itineraryIntro']),
+                'isViaKirkenes': voyage_detail['isViaKirkenes'],
+                'isClassicVoyage': voyage_detail['destinationId'] == 20927 and (voyage_detail['fromPort'] == "BGO" or voyage_detail["toPort"] == "BGO") and (voyage_detail['fromPort'] == "KKN" or voyage_detail["toPort"] == "KKN"),
                 'usps': usps,
                 'map': map,
                 'media': media,
