@@ -40,6 +40,7 @@ def create_contentful_environment(space_id, env_id, cma_key):
     """Create Contentful environment given space, environment and Content Management API key"""
     client = contentful_management.Client(cma_key)
     client.default_locale = config.DEFAULT_LOCALE
+
     return client.environments(space_id).find(env_id)
 
 
@@ -580,6 +581,46 @@ def get_asset_type_and_size(uri):
     resp.close()
 
 
+def update_locale_voyage(**kwargs):
+    entry = kwargs['entry']
+    fields = kwargs['fields']
+    market = kwargs['market']
+
+    entry.sys['locale'] = market
+    entry.name = fields['name']
+    entry.shortDescription = fields['shortDescription']
+    entry.longDescription = fields['longDescription']
+    entry.description = fields['description']
+    entry.included = fields['included']
+    entry.notIncluded = fields['notIncluded']
+    entry.notes = fields['notes']
+    entry.duration = fields['duration']
+    entry.travelSuggestionCodes = fields['travelSuggestionCodes']
+    entry.map = fields['map']
+    entry.destinations = fields['destinations']
+    entry.usps = fields['usps']
+    entry.media = fields['media']
+    entry.itinerary = fields['itinerary']
+    return entry
+
+
+def update_locale_itinerary(**kwargs):
+    entry = kwargs['entry']
+    fields = kwargs['fields']
+    market = kwargs['market']
+
+    entry.sys['locale'] = market
+    entry.day = fields['day']
+    entry.location = fields['location']
+    entry.name = fields['name']
+    entry.description = fields['description']
+    entry.images = fields['images']
+    entry.excursions = fields['excursions']
+    entry.departureTime = fields['departureTime']
+    entry.arrivalTime = fields['arrivalTime']
+    return entry
+
+
 def add_entry(**kwargs):
     """
     Add or override entry with given id
@@ -601,7 +642,7 @@ def add_entry(**kwargs):
     """
 
     id = kwargs['id'].replace("/", "")
-
+    market = kwargs['market']
     # old_entry = kwargs['environment'].entries().find(id)
 
     # if old_entry:
@@ -611,18 +652,47 @@ def add_entry(**kwargs):
     #         return entry_link(id)
 
     # if entry with the same id already added, delete it
-    delete_entry_if_exists(kwargs['environment'], id)
+    #delete_entry_if_exists(kwargs['environment'], id)
+
+    fields = kwargs['fields']
 
     entry_attributes = {
         'content_type_id': kwargs['content_type_id'],
-        'fields': kwargs['fields']
+        'fields': fields
     }
 
-    try:
-        kwargs['environment'].entries().create(id, entry_attributes)
-    except Exception as e:
-        logging.error('Exception occurred while creating entry with ID: %s, error: %s' % (id, e))
-        return e
+    entry_exist = is_entry_exists(kwargs['environment'], id)
+
+    if entry_exist:
+        try:
+            entry = kwargs['environment'].entries().find(id)
+            if market is not None:
+                if kwargs['content_type_id'] == "voyage":
+                    update_locale_voyage(entry=entry, fields=fields, market=market)
+                if kwargs['content_type_id'] == "itineraryDay":
+                    update_locale_itinerary(entry=entry, fields=fields, market=market)
+            else:
+                entry.update(entry_attributes)
+            entry.save()
+            logging.info('Entry updated: %s' % id)
+        except Exception as e:
+            logging.error('Exception occurred while trying to update entry with ID: %s, error: %s' % (id, e))
+            return e
+    else:
+        try:
+            if market is not None:
+                local_fields = field_localizer(market, fields, None)
+                entry_attributes = {
+                    'content_type_id': kwargs['content_type_id'],
+                    'fields': local_fields
+                }
+                kwargs['environment'].entries().create(id, entry_attributes)
+            else:
+                kwargs['environment'].entries().create(id, entry_attributes)
+            logging.info('Entry created: %s' % id)
+        except Exception as e:
+            logging.error('Exception occurred while creating entry with ID: %s, error: %s' % (id, e))
+            return e
 
     try:
         kwargs['environment'].entries().find(id).publish()
@@ -630,23 +700,27 @@ def add_entry(**kwargs):
         logging.error('Exception occurred while publishing entry with ID: %s, error: %s' % (id, e))
         return e
 
-    logging.info('Entry added: %s' % id)
     return entry_link(id)
 
 
-def field_localizer(locale, field_dict):
+def field_localizer(locale, field_dict, market):
     """Localize field dictionary for a given locale"""
 
     d = {}
-    for key, value in field_dict.items():
-        d[key] = {
-            locale: value
-        }
-        if locale == 'en' and key == 'travelSuggestionCodes':
+    if market is not None:
+        for key, value in field_dict.items():
+            d[key] = value
+
+    else:
+        for key, value in field_dict.items():
             d[key] = {
-                locale: value,
-                'en-EU': value
+                locale: value
             }
+            if locale == 'en' and key == 'travelSuggestionCodes':
+                d[key] = {
+                    locale: value,
+                    'en-EU': value
+                }
     return d
 
 

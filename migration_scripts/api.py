@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_executor import Executor
 from helpers import IntListConverter, create_lookup_dictionary
 from helpers import ListConverter
@@ -50,13 +50,15 @@ def sync_excursion_skip_excursion_ids(excursion_ids):
 @app.route('/sync/voyages/')
 @app.route('/sync/voyages')
 def sync_voyages():
-    return start_task_executor_if_available(voyages.run_sync)
+    market = request.args.get('market')
+    return start_task_executor_if_available(voyages.run_sync, {"market": market})
 
 
 @app.route('/sync/voyages/<int_list:voyage_ids>/')
 @app.route('/sync/voyages/<int_list:voyage_ids>')
 def sync_voyages_with_voyage_ids(voyage_ids):
-    return start_task_executor_if_available(voyages.run_sync, {"content_ids": voyage_ids, "include": True})
+    market = request.args.get('market')
+    return start_task_executor_if_available(voyages.run_sync, {"content_ids": voyage_ids, "include": True, "market": market})
 
 
 @app.route('/sync/voyages/skip/<int_list:voyage_ids>/')
