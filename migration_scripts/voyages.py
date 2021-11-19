@@ -25,8 +25,8 @@ logging.basicConfig(
 CMS_API_URLS = {
     "en": "https://global.hurtigruten.com/rest/b2b/voyages",
     # "EN-AMERICAS": "https://www.hurtigruten.com/rest/b2b/voyages",
-    "EN-APAC": "https://www.hurtigruten.com.au/rest/b2b/voyages",
-    # "de": "https://www.hurtigruten.de/rest/b2b/voyages",
+    "en-AU": "https://www.hurtigruten.com.au/rest/b2b/voyages",
+    # "de-DE": "https://www.hurtigruten.de/rest/b2b/voyages",
     "en-GB": "https://www.hurtigruten.co.uk/rest/b2b/voyages",
     # "de-CH": "https://www.hurtigruten.ch/rest/b2b/voyages",
     # "sv-SE": "https://www.hurtigrutenresan.se/rest/b2b/voyages",
@@ -87,13 +87,13 @@ def prepare_environment(market):
             # if helpers.skip_entry_if_not_updated(voyage, key, voyage["id"])
             if voyage["isBookable"] and voyage["brandingType"] == "expedition"
         ]
-        epi_voyage_ids += [voyage["id"] for voyage in helpers.read_json_data(value)]
+        # epi_voyage_ids += [voyage["id"] for voyage in helpers.read_json_data(value)]
 
     # Create distinct list
     voyage_ids = set(voyage_ids)
-    epi_voyage_ids = set(epi_voyage_ids)
+    # epi_voyage_ids = set(epi_voyage_ids)
 
-    logging.info("Number of voyages in EPI: %s" % len(epi_voyage_ids))
+    # logging.info("Number of voyages in EPI: %s" % len(epi_voyage_ids))
     logging.info("")
     logging.info("Number of voyages changed: %s" % len(voyage_ids))
     logging.info("-----------------------------------------------------")
@@ -112,7 +112,8 @@ def update_voyage(contentful_environment, voyage_id, market):
     voyage_detail_by_locale = {}
     update_api_urls = get_api_urls(market)
 
-    # {"uk": "json content for voyage with id: 20480"}
+    # {"uk": "uk json content for voyage with id: voyage_id", "au": "au json content for au voyage with id: voyage_id"}
+
     for locale, url in update_api_urls.items():
         # load all fields for the particular voyage by calling GET voyages/{id}
         voyage_detail_by_locale[locale] = helpers.read_json_data(
@@ -145,6 +146,39 @@ def update_voyage(contentful_environment, voyage_id, market):
             # ins't this just a copy of voyage_detail_by_locale dict?
             voyage_detail_by_locale_usps[locale] = locale_voyage_detail
             usps_list = locale_voyage_detail["sellingPoints"]
+
+    map_link = (
+        helpers.add_or_reuse_asset(
+            environment=contentful_environment,
+            asset_uri=default_voyage_detail["largeMap"]["highResolutionUri"],
+            id=default_voyage_detail["largeMap"]["id"].replace(":", "-"),
+            title=default_voyage_detail["largeMap"]["alternateText"],
+            file_name=default_voyage_detail["largeMap"]["alternateText"],
+        )
+        if default_voyage_detail["largeMap"] is not None
+        else None
+    )
+
+    map_wrapper_link = helpers.add_entry(
+        environment=contentful_environment,
+        id=default_voyage_detail["largeMap"]["id"].replace(":", "-"),
+        content_type_id="imageWrapper",
+        market=market or None,
+        fields=helpers.merge_localized_dictionaries(
+            *(
+                helpers.field_localizer(
+                    locale,
+                    {
+                        "internalName": voyage_detail["heading"],
+                        "image": map_link,
+                        "additionalMetadata": voyage_detail["heading"],
+                    },
+                    market,
+                )
+                for locale, voyage_detail in voyage_detail_by_locale.items()
+            )
+        ),
+    )
 
     # usps = [
     #     helpers.add_entry(
@@ -179,52 +213,55 @@ def update_voyage(contentful_environment, voyage_id, market):
     #     for i, media_item in enumerate(default_voyage_detail["mediaContent"])
     # ]
 
-    image_gallery_id = ""
-    image_wrapper_links = []
-    for i, media_item in enumerate(default_voyage_detail["mediaContent"]):
-        media_link = helpers.add_or_reuse_asset(
-            environment=contentful_environment,
-            asset_uri=media_item["highResolutionUri"],
-            id=media_item["id"],
-            title=media_item["alternateText"],
-        )
-        image_gallery_id += media_item["id"]
+    # for locale, entry in voyage_detail_by_locale.items():
+    #     entry["mediaContent"["alternateText"]
 
+    # image_gallery_id = ""
+    # image_wrapper_links = []
+    # for i, media_item in enumerate(default_voyage_detail["mediaContent"]):
+    #     media_link = helpers.add_or_reuse_asset(
+    #         environment=contentful_environment,
+    #         asset_uri=media_item["highResolutionUri"],
+    #         id=media_item["id"],
+    #         title=media_item["alternateText"],
+    #     )
+    #     image_gallery_id += media_item["id"]
 
-        image_wrapper_link = helpers.add_entry(
-            environment=contentful_environment,
-            id=media_item["id"],
-            content_type_id="imageWrapper",
-            market=market or None,
-            fields=helpers.field_localizer(
-                config.DEFAULT_LOCALE,
-                {
-                    "internalName": media_item["alternateText"],
-                    "image": media_link,
-                    "additionalMetadata": media_item["alternateText"],
-                },
-                None,
-            ),
-        )
-        image_wrapper_links.append(image_wrapper_link)
+    #     image_wrapper_link = helpers.add_entry(
+    #         environment=contentful_environment,
+    #         id=media_item["id"],
+    #         content_type_id="imageWrapper",
+    #         market=market or None,
+    #         fields=helpers.field_localizer(
+    #             config.DEFAULT_LOCALE,
+    #             {
+    #                 # "internalName": media_item["alternateText"],
+    #                 "internalName": media_item["alternateText"],
+    #                 "image": media_link,
+    #                 "additionalMetadata": media_item["alternateText"],
+    #             },
+    #             None,
+    #         ),
+    #     )
+    #     image_wrapper_links.append(image_wrapper_link)
 
-    image_gallery_id += "_gallery"
+    # image_gallery_id += "_gallery"
 
-    image_gallery_link = helpers.add_entry(
-        environment=contentful_environment,
-        id=image_gallery_id,
-        content_type_id="imageGallery",
-        market=market or None,
-        fields=helpers.field_localizer(
-            config.DEFAULT_LOCALE,
-            {
-                "internalName": default_voyage_detail["heading"],
-                "images": image_wrapper_links,
-                "title": default_voyage_detail["heading"],
-            },
-            None,
-        ),
-    )
+    # image_gallery_link = helpers.add_entry(
+    #     environment=contentful_environment,
+    #     id=image_gallery_id,
+    #     content_type_id="imageGallery",
+    #     market=market or None,
+    #     fields=helpers.field_localizer(
+    #         config.DEFAULT_LOCALE,
+    #         {
+    #             "internalName": default_voyage_detail["heading"],
+    #             "images": image_wrapper_links,
+    #             "title": default_voyage_detail["heading"],
+    #         },
+    #         None,
+    #     ),
+    # )
 
     # map = (
     #     helpers.add_or_reuse_asset(
@@ -241,26 +278,26 @@ def update_voyage(contentful_environment, voyage_id, market):
     # Assuming that itinerary days are the same for every locale
 
     # Check if there's available itinerary for a given locale, and filter out locales which don't have any itineraries
-    voyage_detail_by_locale_itineraries = {}
-    itinerary_list = []
-    length_of_list = len(default_voyage_detail["itinerary"])
-    for locale, locale_voyage_detail in voyage_detail_by_locale.items():
-        if (
-            "itinerary" not in locale_voyage_detail
-            or len(locale_voyage_detail["itinerary"]) == 0
-        ):
-            logging.warning(
-                "Itinerary is not available in %s for %s" % (locale, voyage_id)
-            )
-        if len(locale_voyage_detail["itinerary"]) > length_of_list:
-            logging.error(
-                "Itinerary has to many itineraries. Rerun migration for %s" % locale
-            )
-        else:
-            voyage_detail_by_locale_itineraries[locale] = locale_voyage_detail
-            itinerary_list = locale_voyage_detail["itinerary"]
+    # voyage_detail_by_locale_itineraries = {}
+    # itinerary_list = []
+    # length_of_list = len(default_voyage_detail["itinerary"])
+    # for locale, locale_voyage_detail in voyage_detail_by_locale.items():
+    #     if (
+    #         "itinerary" not in locale_voyage_detail
+    #         or len(locale_voyage_detail["itinerary"]) == 0
+    #     ):
+    #         logging.warning(
+    #             "Itinerary is not available in %s for %s" % (locale, voyage_id)
+    #         )
+    #     if len(locale_voyage_detail["itinerary"]) > length_of_list:
+    #         logging.error(
+    #             "Itinerary has to many itineraries. Rerun migration for %s" % locale
+    #         )
+    #     else:
+    #         voyage_detail_by_locale_itineraries[locale] = locale_voyage_detail
+    #         itinerary_list = locale_voyage_detail["itinerary"]
 
-    highlightedImages = []
+    # highlightedImages = []
 
     # UPDATE FOR GLOBAL
 
@@ -280,7 +317,7 @@ def update_voyage(contentful_environment, voyage_id, market):
     #                         "internalName": media_item[
     #                             "alternateText"
     #                         ],
-    #                         "image": helpers.add_or_reuse_asset(
+    # "image": helpers.add_or_reuse_asset(
     #                             environment=contentful_environment,
     #                             asset_uri=media_item[
     #                                 "highResolutionUri"
@@ -299,82 +336,83 @@ def update_voyage(contentful_environment, voyage_id, market):
     #         all_itinerary_day_images.append(itinerary_day_images)
     # logging.info("All it day images", all_itinerary_day_images)
 
-    itinerary = [
-        helpers.add_entry(
-            environment=contentful_environment,
-            id="itday%s-%d" % (voyage_id, i),
-            content_type_id="itinerary",
-            market=market or None,
-            fields=helpers.merge_localized_dictionaries(
-                *(
-                    helpers.field_localizer(
-                        locale,
-                        {
-                            "internalName": default_voyage_detail["itinerary"][i][
-                                "heading"
-                            ],
-                            "day": locale_voyage_detail["itinerary"][i]["day"],
-                            "title": locale_voyage_detail["itinerary"][i]["heading"],
-                            "longDescription": helpers.convert_to_contentful_rich_text(
-                                locale_voyage_detail["itinerary"][i]["body"]
-                            ),
-                            # "port": helpers.add_entry(
-                            #     environment=contentful_environment,
-                            #     id="port-%s-%d"
-                            #     % (
-                            #         default_voyage_detail["itinerary"][i]["location"],
-                            #         i,
-                            #     ),
-                            #     content_type_id="port",
-                            #     market=market or None,
-                            #     # fields=
-                            # ),
-                            # "highlightedImage": [
-                            #     helpers.add_entry(
-                            #         environment=contentful_environment,
-                            #         id=f"{media_item[k]['id']}_wrapper",
-                            #         content_type_id="imageWrapper",
-                            #         market=market or None,
-                            #         fields=helpers.field_localizer(
-                            #             config.DEFAULT_LOCALE,
-                            #             {
-                            #                 "internalName": media_item[k][
-                            #                     "alternateText"
-                            #                 ],
-                            #                 "image": helpers.add_or_reuse_asset(
-                            #                     environment=contentful_environment,
-                            #                     asset_uri=media_item[k][
-                            #                         "highResolutionUri"
-                            #                     ],
-                            #                     id=media_item[k]["id"],
-                            #                     title=media_item[k]["alternateText"],
-                            #                 ),
-                            #                 "additionalMetadata": media_item[k][
-                            #                     "alternateText"
-                            #                 ],
-                            #             },
-                            #             None,
-                            #         ),
-                            #     )
-                            #     for k, media_item in enumerate(
-                            #         locale_voyage_detail["itinerary"][i]["mediaContent"]
-                            #     )
-                            # ],
-                            # "excursions": [
-                            #     helpers.entry_link(excursion_id)
-                            #     for excursion_id in locale_voyage_detail["itinerary"][
-                            #         i
-                            #     ]["includedExcursions"]
-                            # ],
-                        },
-                        market,
-                    )
-                    for locale, locale_voyage_detail in voyage_detail_by_locale_itineraries.items()
-                )
-            ),
-        )
-        for i, itinerary_day in enumerate(itinerary_list)
-    ]
+    # itinerary = [
+    #     helpers.add_entry(
+    #         environment=contentful_environment,
+    #         id="itday%s-%d" % (voyage_id, i),
+    #         content_type_id="itinerary",
+    #         market=market or None,
+    #         fields=helpers.merge_localized_dictionaries(
+    #             *(
+    #                 helpers.field_localizer(
+    #                     locale,
+    #                     {
+    #                         "internalName": default_voyage_detail["itinerary"][i][
+    #                             "heading"
+    #                         ],
+    #                         "day": locale_voyage_detail["itinerary"][i]["day"],
+    #                         "title": locale_voyage_detail["itinerary"][i]["heading"],
+    #                         "longDescription": helpers.convert_to_contentful_rich_text(
+    #                             locale_voyage_detail["itinerary"][i]["body"]
+    #                         ),
+    #                         "map": "PLACEHOLDER",
+    # "port": helpers.add_entry(
+    #     environment=contentful_environment,
+    #     id="port-%s-%d"
+    #     % (
+    #         default_voyage_detail["itinerary"][i]["location"],
+    #         i,
+    #     ),
+    #     content_type_id="port",
+    #     market=market or None,
+    #     # fields=
+    # ),
+    # "highlightedImage": [
+    #     helpers.add_entry(
+    #         environment=contentful_environment,
+    #         id=f"{media_item[k]['id']}_wrapper",
+    #         content_type_id="imageWrapper",
+    #         market=market or None,
+    #         fields=helpers.field_localizer(
+    #             config.DEFAULT_LOCALE,
+    #             {
+    #                 "internalName": media_item[k][
+    #                     "alternateText"
+    #                 ],
+    #                 "image": helpers.add_or_reuse_asset(
+    #                     environment=contentful_environment,
+    #                     asset_uri=media_item[k][
+    #                         "highResolutionUri"
+    #                     ],
+    #                     id=media_item[k]["id"],
+    #                     title=media_item[k]["alternateText"],
+    #                 ),
+    #                 "additionalMetadata": media_item[k][
+    #                     "alternateText"
+    #                 ],
+    #             },
+    #             None,
+    #         ),
+    #     )
+    #     for k, media_item in enumerate(
+    #         locale_voyage_detail["itinerary"][i]["mediaContent"]
+    #     )
+    # ],
+    # "excursions": [
+    #     helpers.entry_link(excursion_id)
+    #     for excursion_id in locale_voyage_detail["itinerary"][
+    #         i
+    #     ]["includedExcursions"]
+    # ],
+    #                     },
+    #                     market,
+    #                 )
+    #                 for locale, locale_voyage_detail in voyage_detail_by_locale_itineraries.items()
+    #             )
+    #         ),
+    #     )
+    #     for i, itinerary_day in enumerate(itinerary_list)
+    # ]
 
     helpers.add_entry(
         environment=contentful_environment,
@@ -386,12 +424,14 @@ def update_voyage(contentful_environment, voyage_id, market):
                 helpers.field_localizer(
                     locale,
                     {
-                        "internalName": default_voyage_detail["heading"],
-                        "name": voyage_detail["heading"],
+                        # "internalName": default_voyage_detail["heading"],
+                        # "name": "Antartica from script 2",
+                        # "name": voyage_detail["heading"],
                         # "destination": skip,
+                        "map": map_wrapper_link,
                         # "highlightedImage": image_wrapper_links[-1],
                         # "slug": extract_slug(voyage_detail["url"]),
-                        # "bookingCode": voyage_detail["travelSuggestionCodes"],
+                        # "bookingCode": ["TESTCODE1", "TESTCODE2"]
                         # "shortDescription": helpers.convert_to_contentful_rich_text(
                         #     voyage_detail["itineraryOneLiner"]
                         # ),
@@ -406,7 +446,7 @@ def update_voyage(contentful_environment, voyage_id, market):
                         #     voyage_detail["notIncludedInfo"]
                         # ),
                         # "usPs": remove_nones_from_list(voyage_detail["sellingPoints"]),
-                        "productType": "Expedition",
+                        # "productType": "Expedition",
                         # "ship": skip,
                         # "includedFeatures": skip,
                         # "teamInformation": skip,
@@ -448,9 +488,7 @@ def run_sync(**kwargs):
     voyage_ids, contentful_environment = prepare_environment(market)
 
     # fetch ids that already exist, exclude them from voyage_ids
-    # only run script for voyages that don't yet exist 
-
-
+    # only run script for voyages that don't yet exist
 
     for voyage_id in voyage_ids:
         if parameter_voyage_ids is not None:

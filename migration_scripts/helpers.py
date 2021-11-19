@@ -759,6 +759,10 @@ def add_entry(**kwargs):
                     update_image_wrapper(
                         entry=entry, fields=fields, market=config.DEFAULT_LOCALE
                     )
+            elif kwargs["content_type_id"]:
+                for field_name, field_value in fields.items():
+                    for locale, locale_value in field_value.items():
+                        entry._fields[locale][field_name] = locale_value
             else:
                 entry.update(entry_attributes)
             entry.save()
@@ -809,6 +813,13 @@ def field_localizer(locale, field_dict, market):
             d[key] = value
 
     else:
+
+        # {
+        #     "internalName": {"en": media_item["alternateText"]},
+        #     "image": media_link,
+        #     "additionalMetadata": media_item["alternateText"],
+        # "travelSuggestionCodes": {"en": value, "en-EU", "value"}
+        # }
         for key, value in field_dict.items():
             d[key] = {locale: value}
             if locale == "en" and key == "travelSuggestionCodes":
