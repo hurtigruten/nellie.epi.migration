@@ -18,11 +18,12 @@ logging.basicConfig(
 
 CMS_API_URLS = {
     # "en-US": "https://www.hurtigruten.com/rest/b2b/voyages"
-    "en": "https://global.hurtigruten.com/rest/excursion/excursions",
-    "EN-AMERICAS": "https://www.hurtigruten.com/rest/excursion/excursions",
-    "EN-APAC": "https://www.hurtigruten.com.au/rest/excursion/excursions",
-    "de": "https://www.hurtigruten.de/rest/excursion/excursions",
-    "fr-FR": "https://www.hurtigruten.fr/rest/excursion/excursions"
+    "en": "https://global.hurtigruten.com/rest/b2b/excursions",
+    # "EN-AMERICAS": "https://www.hurtigruten.com/rest/excursion/excursions",
+    "en-GB": "https://www.hurtigruten.co.uk/rest/b2b/excursions",
+    "en-AU": "https://www.hurtigruten.com.au/rest/b2b/excursions",
+    # "de": "https://www.hurtigruten.de/rest/excursion/excursions",
+    # "fr-FR": "https://www.hurtigruten.fr/rest/excursion/excursions"
 }
 
 excursions_by_locale = {}
@@ -74,12 +75,13 @@ def prepare_environment():
     logging.info('')
 
     logging.info('Excursion IDs to migrate: ')
-    for excursion_id in excursion_ids:
+    for excursion_id in epi_excursion_ids:
         logging.info(excursion_id)
+
     logging.info('-----------------------------------------------------')
     logging.info('')
 
-    return excursion_ids, contentful_environment
+    return epi_excursion_ids, contentful_environment
 
 
 def update_excursion(contentful_environment, excursion_id):
@@ -99,29 +101,66 @@ def update_excursion(contentful_environment, excursion_id):
         logging.info('Could not find default excursion detail for excursion ID: %s' % excursion_id)
         return
 
+    image_link = helpers.add_or_reuse_asset(
+        environment=contentful_environment,
+        asset_uri=default_excursion["image"]["imageUrl"],
+        id="excp-%s" % default_excursion['id'],
+        title=default_excursion["image"]["altText"] or default_excursion.get('heading') or default_excursion.get('title'),
+        file_name=default_excursion["image"]["altText"] or default_excursion.get('heading') or default_excursion.get('title'),
+    ) if default_excursion["image"] is not None else None
+    
+
+    image_wrapper_link = helpers.add_entry(
+        environment=contentful_environment,
+        id="excp-%s" % default_excursion['id'],
+        content_type_id="imageWrapper",
+        market=None,
+        fields=helpers.merge_localized_dictionaries(
+            *(
+                helpers.field_localizer(
+                    locale,
+                    {
+                        "internalName": excursion["image"]['altText'] if excursion['image'] is not None else '',
+                        "image": image_link,
+                        "additionalMetadata": excursion["image"]['caption'] if excursion['image'] is not None else '',
+                    },
+                    None,
+                )
+                for locale, excursion in excursion_by_locale.items()
+            )
+        ),
+    ) if image_link is not None else None
+
+    destination_ids = list(filter(None, [helpers.destination_name_to_cf_id(contentful_environment, d) for d in default_excursion.get('destinations')]))
+    destination_links = [helpers.entry_link(di) for di in destination_ids]
+
     helpers.add_entry(
         environment = contentful_environment,
         id = str(excursion_id),
         content_type_id = "excursion",
+        market = None,
         fields = helpers.merge_localized_dictionaries(*(
             helpers.field_localizer(locale, {
-                'name': excursion['title'],
-                'description': helpers.convert_to_contentful_rich_text(excursion['summary']),
-                'years': [year['id'] for year in excursion['years']],
+                'internalName': excursion.get('heading') or excursion.get('title'),
+                'name': excursion.get('heading') or excursion.get('title'),
+                'introduction': excursion.get('intro'),
+                'description': helpers.convert_to_contentful_rich_text(excursion.get('body') or excursion.get('summary') or default_excursion.get('body')),
+                'practicalInformation': helpers.convert_to_contentful_rich_text(excursion.get('secondaryBody')) if excursion.get('secondaryBody') else None,
+                'years': [year['text'] for year in excursion['years']],
                 'seasons': [season_dict[season['id']] for season in excursion['seasons']],
-                'location': excursion['details'],
-                'duration': excursion['durationText'],
-                'difficulty': difficulty_dict[excursion['physicalLevel'][0]['id']],
-                'bookingCode': excursion['code'],
-                'media': [
-                    helpers.add_asset(
-                        environment = contentful_environment,
-                        asset_uri = excursion['image']['imageUrl'],
-                        id = "excp%s" % excursion['id'],
-                        title = helpers.clean_asset_name(excursion['image']['altText'] or excursion['title'],
-                                                         excursion['id']))
-                ] if excursion['image'] is not None else []
-            }) for locale, excursion in excursion_by_locale.items()
+                'destinations': destination_links,
+                'duration': excursion.get('duration') or excursion.get('durationText'),
+                'requirements': excursion.get('requirements'),
+                'difficulty': excursion['physicalLevel'][0]['text'],
+                'bookingCode': excursion.get('bookingCode') or excursion.get('code'),
+                'sellingPoints': list(filter(None, excursion.get('sellingPoints') or [])),
+                'price': excursion.get('priceValue') or excursion.get('price') or 0,
+                'currency': excursion.get('currency') or helpers.remove_digits(excursion.get('price') or ''),
+                'minimumNumberOfGuests': excursion.get('minimumNumberOfGuests'),
+                'maximumNumberOfGuests': excursion.get('maximumNumberOfGuests'),
+                'activityCategory': [activityCategory['text'] for activityCategory in excursion.get('activityCategory') or []],
+                'media': [image_wrapper_link] if image_wrapper_link is not None else []
+            }, None) for locale, excursion in excursion_by_locale.items()
         ))
     )
 
@@ -144,6 +183,7 @@ def run_sync(**kwargs):
     else:
         logging.info('Running excursions sync')
     excursion_ids, contentful_environment = prepare_environment()
+
     for excursion_id in excursion_ids:
         if parameter_excursion_ids is not None:
             # run only included excursions

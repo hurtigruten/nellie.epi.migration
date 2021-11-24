@@ -18,7 +18,7 @@ asset_types = {
     "excursions": ["excp"],
     "voyages": ["voyagePicture", "itdpic", "voyageMap"],
     "ships": ["shippic-", "shCabCatPic-", "shCabGr-", "deckPic-"],
-    # "map": ["mapImage"]
+    "map": ["-mapImage"]
     # "programs": ["programPicture"]
 }
 

@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import os
 import logging
 import excursions
+import programs_nellie
 import voyages
 import ships
 import publish_imported_assets
@@ -33,6 +34,10 @@ app.url_map.converters["list"] = ListConverter
 
 basic_auth = BasicAuth(app)
 
+@app.route("/sync/programs/")
+@app.route("/sync/programs")
+def sync_programs():
+    return start_task_executor_if_available(programs_nellie.run_sync)
 
 @app.route("/sync/excursions/")
 @app.route("/sync/excursions")
