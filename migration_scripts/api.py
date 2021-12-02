@@ -39,6 +39,14 @@ basic_auth = BasicAuth(app)
 def sync_programs():
     return start_task_executor_if_available(programs_nellie.run_sync)
 
+@app.route("/sync/programs/<int_list:program_ids>/")
+@app.route("/sync/programs/<int_list:program_ids>")
+def sync_program_with_program_ids(program_ids):
+    return start_task_executor_if_available(
+        programs_nellie.run_sync, {"content_ids": program_ids, "include": True}
+    )
+
+
 @app.route("/sync/excursions/")
 @app.route("/sync/excursions")
 def sync_excursions():

@@ -90,48 +90,64 @@ def update_program(contentful_environment, program_id):
         logging.info('Could not find default program detail for program ID: %s' % program_id)
         return
 
-        # image_gallery_id = ""
-    # image_wrapper_links = []
-    # for i, media_item in enumerate(default_voyage_detail["mediaContent"]):
-    #     media_link = helpers.add_or_reuse_asset(
-    #         environment=contentful_environment,
-    #         asset_uri=media_item["highResolutionUri"],
-    #         id=media_item["id"],
-    #         title=media_item["alternateText"],
-    #     )
-    #     image_gallery_id += media_item["id"]
+    # helpers.merge_localized_dictionaries(
+    #             *(
+    #                 helpers.field_localizer(
+    #                     locale,
+    #                     {
+             
+    #                         "availableExcursions": [
+    #                             helpers.entry_link(excursion_id)
+    #                             for excursion_id in locale_voyage_detail["itinerary"][
+    #                                 i
+    #                             ]["includedExcursions"]
+    #                         ],
+    #                     },
+    #                     market,
+    #                 )
+    #                 for locale, locale_voyage_detail in voyage_detail_by_locale_itineraries.items()
 
-    #     image_wrapper_link = helpers.add_entry(
-    #         environment=contentful_environment,
-    #         id=media_item["id"],
-    #         content_type_id="imageWrapper",
-    #         market=market or None,
-    #         fields=helpers.field_localizer(
-    #             config.DEFAULT_LOCALE,
-    #             {
-    #                 # "internalName": media_item["alternateText"],
-    #                 "internalName": media_item["alternateText"],
-    #                 "image": media_link,
-    #                 "additionalMetadata": media_item["alternateText"],
-    #             },
-    #             None,
-    #         ),
-    #     )
-    #     image_wrapper_links.append(image_wrapper_link)
+    #image_gallery_id = "program-gallery-%s-" % str(program_id)
+    image_wrapper_links = []
+    for i, media_item in enumerate(default_program["mediaContent"]):
+        media_link = helpers.add_or_reuse_asset(
+            environment=contentful_environment,
+            asset_uri=media_item["highResolutionUri"],
+            id=media_item["id"],
+            title=media_item["alternateText"],
+        )
+        #image_gallery_id += media_item["id"]
 
-    # image_gallery_id += "_gallery"
+        image_wrapper_link = helpers.add_entry(
+            environment=contentful_environment,
+            id=media_item["id"],
+            content_type_id="imageWrapper",
+            market=None,
+            fields=helpers.merge_localized_dictionaries( *(helpers.field_localizer(
+                locale,
+                {
+                    "internalName": locale_program["mediaContent"][i]["alternateText"],
+                    "image": media_link,
+                    "additionalMetadata": locale_program["mediaContent"][i]["alternateText"]
+                },
+                None,
+            ) for locale, locale_program in program_by_locale.items()))
+        )
+        image_wrapper_links.append(image_wrapper_link)
+
+    #image_gallery_id += "_gallery"
 
     # image_gallery_link = helpers.add_entry(
     #     environment=contentful_environment,
     #     id=image_gallery_id,
     #     content_type_id="imageGallery",
-    #     market=market or None,
+    #     market=None,
     #     fields=helpers.field_localizer(
     #         config.DEFAULT_LOCALE,
     #         {
-    #             "internalName": default_voyage_detail["heading"],
+    #             "internalName": default_program["heading"],
     #             "images": image_wrapper_links,
-    #             "title": default_voyage_detail["heading"],
+    #             "title": default_program["heading"],
     #         },
     #         None,
     #     ),
@@ -182,7 +198,7 @@ def update_program(contentful_environment, program_id):
                 'introduction': program.get('intro'),
                 'description': helpers.convert_to_contentful_rich_text(program.get('body') or program.get('summary') or default_program.get('body')),
                 'practicalInformation': helpers.convert_to_contentful_rich_text(program.get('secondaryBody')) if program.get('secondaryBody') else None,
-                'years': [year['text'] for year in program['years']],
+                'years': [year['text'] for year in program.get('years') or []],
                 'seasons': [season_dict[season['id']] for season in program['seasons']],
                 'destinations': destination_links,
                 'durationHours': program.get('durationHours'),
@@ -193,7 +209,7 @@ def update_program(contentful_environment, program_id):
                 'currency': program.get('currency') or helpers.remove_digits(program.get('price') or ''),
                 'minimumNumberOfGuests': program.get('minimumNumberOfGuests'),
                 'maximumNumberOfGuests': program.get('maximumNumberOfGuests'),
-                'media': [image_wrapper_link] if image_wrapper_link is not None else []
+                'media': image_wrapper_links
             }, None) for locale, program in program_by_locale.items()
         ))
     )
@@ -217,7 +233,7 @@ def run_sync(**kwargs):
     else:
         logging.info('Running programs sync')
     program_ids, contentful_environment = prepare_environment()
-    for program_id in program_ids:
+    for idx, program_id in enumerate(program_ids):
         if parameter_program_ids is not None:
             # run only included programs
             if include and program_id not in parameter_program_ids:
@@ -226,6 +242,7 @@ def run_sync(**kwargs):
             if not include and program_id in parameter_program_ids:
                 continue
         try:
+            logging.info('Updating program %s/%s' % (idx, len(program_ids)))
             update_program(contentful_environment, program_id)
         except Exception as e:
             logging.error('Program migration error with ID: %s, error: %s' % (program_id, e))
