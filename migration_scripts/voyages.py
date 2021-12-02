@@ -105,8 +105,9 @@ def prepare_environment(market):
 
     return voyage_ids, contentful_environment
 
+
 def getInternalName(heading, bookingCodes):
-    if (bookingCodes is None):
+    if bookingCodes is None:
         return heading
     return heading + "".join(bookingCodes)
 
@@ -289,34 +290,34 @@ def update_voyage(contentful_environment, voyage_id, market):
 
     highlightedImages = []
 
-    # all_itinerary_day_images = []
-    # for i, day in enumerate(itinerary_list):
-    #     itinerary_day_images = []
-    #     it_day_media_content = day["mediaContent"]
-    #     for media_item in it_day_media_content:
-    #         it_day_iamge_wrapper = helpers.add_entry(
-    #             environment=contentful_environment,
-    #             id=f"{media_item['id']}_wrapper",
-    #             content_type_id="imageWrapper",
-    #             market=market or None,
-    #             fields=helpers.field_localizer(
-    #                 config.DEFAULT_LOCALE,
-    #                 {
-    #                     "internalName": media_item["alternateText"],
-    #                     "image": helpers.add_or_reuse_asset(
-    #                         environment=contentful_environment,
-    #                         asset_uri=media_item["highResolutionUri"],
-    #                         id=media_item["id"],
-    #                         title=media_item["alternateText"],
-    #                     ),
-    #                     "additionalMetadata": media_item["alternateText"],
-    #                 },
-    #                 None,
-    #             ),
-    #         )
-    #         itinerary_day_images.append(it_day_iamge_wrapper)
-    #     all_itinerary_day_images.append(itinerary_day_images)
-    # logging.info("All it day images", all_itinerary_day_images)
+    all_itinerary_day_images = []
+    for i, day in enumerate(itinerary_list):
+        itinerary_day_images = []
+        it_day_media_content = day["mediaContent"]
+        for media_item in it_day_media_content:
+            it_day_image_wrapper = helpers.add_entry(
+                environment=contentful_environment,
+                id=media_item["id"],
+                content_type_id="imageWrapper",
+                market=market or None,
+                fields=helpers.field_localizer(
+                    config.DEFAULT_LOCALE,
+                    {
+                        "internalName": media_item["alternateText"],
+                        "image": helpers.add_or_reuse_asset(
+                            environment=contentful_environment,
+                            asset_uri=media_item["highResolutionUri"],
+                            id=media_item["id"],
+                            title=media_item["alternateText"],
+                        ),
+                        "additionalMetadata": media_item["alternateText"],
+                    },
+                    None,
+                ),
+            )
+            itinerary_day_images.append(it_day_image_wrapper)
+        all_itinerary_day_images.append(itinerary_day_images)
+    logging.info("All it day images", all_itinerary_day_images)
 
     itinerary = [
         helpers.add_entry(
@@ -337,7 +338,7 @@ def update_voyage(contentful_environment, voyage_id, market):
                             # "longDescription": helpers.convert_to_contentful_rich_text(
                             #     locale_voyage_detail["itinerary"][i]["body"]
                             # ),
-                            #"highlightedImage": all_itinerary_day_images[i],
+                            "highlightedImage": all_itinerary_day_images[i],
                             # "map": "PLACEHOLDER",
                             # "port": helpers.add_entry(
                             #     environment=contentful_environment,
@@ -350,12 +351,12 @@ def update_voyage(contentful_environment, voyage_id, market):
                             #     market=market or None,
                             #     # fields=
                             # ),
-                            "availableExcursions": [
-                                helpers.entry_link(excursion_id)
-                                for excursion_id in locale_voyage_detail["itinerary"][
-                                    i
-                                ]["includedExcursions"]
-                            ],
+                            # "availableExcursions": [
+                            #     helpers.entry_link(excursion_id)
+                            #     for excursion_id in locale_voyage_detail["itinerary"][
+                            #         i
+                            #     ]["includedExcursions"]
+                            # ],
                         },
                         market,
                     )
@@ -370,50 +371,50 @@ def update_voyage(contentful_environment, voyage_id, market):
     # logging.info('Found dcfid %s' % destination_cfid)
     # destination_links =  [helpers.entry_link(destination_cfid)] if destination_cfid is not None else []
 
-    helpers.add_entry(
-        environment=contentful_environment,
-        id=str(voyage_id),
-        content_type_id="voyage",
-        market=market or None,
-        fields=helpers.merge_localized_dictionaries(
-            *(
-                helpers.field_localizer(
-                    locale,
-                    {
-                        #"internalName": default_voyage_detail["heading"],
-                        #"name": voyage_detail["heading"],
-                        #"map": map_wrapper_link,
-                        #"highlightedImage": image_wrapper_links[-1],
-                        #"slug": extract_slug(voyage_detail["url"]),
-                        #"bookingCode": voyage_detail['travelSuggestionCodes'],
-                        #"shortDescription": helpers.convert_to_contentful_rich_text(
-                        #    voyage_detail["itineraryOneLiner"]
-                        #),
-                        #"longDescription": helpers.convert_to_contentful_rich_text(
-                        #    voyage_detail["itineraryIntro"]
-                        #),
-                        "itinerary": itinerary,
-                        #"included": helpers.convert_to_contentful_rich_text(
-                        #    voyage_detail["includedInfo"]
-                        #),
-                        #"notIncluded": helpers.convert_to_contentful_rich_text(
-                        #    voyage_detail["notIncludedInfo"]
-                        #),
-                        #"destination": destination_links,
-                        #"usPs": [usp[:255] for usp in remove_nones_from_list(voyage_detail["sellingPoints"])],
-                        #"productType": "Expedition",
-                        # "ship": skip,
-                        # "includedFeatures": skip,
-                        # "teamInformation": skip,
-                        # "practicalInformation": skip,
-                        # "images": image_gallery_link,
-                    },
-                    market,
-                )
-                for locale, voyage_detail in voyage_detail_by_locale.items()
-            )
-        ),
-    )
+    # helpers.add_entry(
+    #     environment=contentful_environment,
+    #     id=str(voyage_id),
+    #     content_type_id="voyage",
+    #     market=market or None,
+    #     fields=helpers.merge_localized_dictionaries(
+    #         *(
+    #             helpers.field_localizer(
+    #                 locale,
+    #                 {
+    #                     #"internalName": default_voyage_detail["heading"],
+    #                     #"name": voyage_detail["heading"],
+    #                     #"map": map_wrapper_link,
+    #                     #"highlightedImage": image_wrapper_links[-1],
+    #                     #"slug": extract_slug(voyage_detail["url"]),
+    #                     #"bookingCode": voyage_detail['travelSuggestionCodes'],
+    #                     #"shortDescription": helpers.convert_to_contentful_rich_text(
+    #                     #    voyage_detail["itineraryOneLiner"]
+    #                     #),
+    #                     #"longDescription": helpers.convert_to_contentful_rich_text(
+    #                     #    voyage_detail["itineraryIntro"]
+    #                     #),
+    #                     # "itinerary": itinerary,
+    #                     #"included": helpers.convert_to_contentful_rich_text(
+    #                     #    voyage_detail["includedInfo"]
+    #                     #),
+    #                     #"notIncluded": helpers.convert_to_contentful_rich_text(
+    #                     #    voyage_detail["notIncludedInfo"]
+    #                     #),
+    #                     #"destination": destination_links,
+    #                     #"usPs": [usp[:255] for usp in remove_nones_from_list(voyage_detail["sellingPoints"])],
+    #                     #"productType": "Expedition",
+    #                     # "ship": skip,
+    #                     # "includedFeatures": skip,
+    #                     # "teamInformation": skip,
+    #                     # "practicalInformation": skip,
+    #                     # "images": image_gallery_link,
+    #                 },
+    #                 market,
+    #             )
+    #             for locale, voyage_detail in voyage_detail_by_locale.items()
+    #         )
+    #     ),
+    # )
 
     for locale, url in update_api_urls.items():
         helpers.update_entry_database(voyage_id, locale)
@@ -422,7 +423,9 @@ def update_voyage(contentful_environment, voyage_id, market):
 
 
 def find_missing(contentful_environment):
-    entries = helpers.get_all_entries_for_content_type(contentful_environment, 'voyage', 40, 120)
+    entries = helpers.get_all_entries_for_content_type(
+        contentful_environment, "voyage", 40, 120
+    )
 
     for entry in entries:
         missingDestination = False
@@ -430,31 +433,34 @@ def find_missing(contentful_environment):
         missingItineraryImage = False
 
         try:
-            if entry.fields('en')['map'] is None:
+            if entry.fields("en")["map"] is None:
                 missingMap = True
 
-            if entry.fields('en')['destination'] is None:
+            if entry.fields("en")["destination"] is None:
                 missingDestination = True
 
-        
-            itrDays = [helpers.get_entry(contentful_environment, itr.id) for itr in entry.fields('en')['itinerary']]
+            itrDays = [
+                helpers.get_entry(contentful_environment, itr.id)
+                for itr in entry.fields("en")["itinerary"]
+            ]
             for itrDay in itrDays:
-                if itrDay.fields('en')['highlighted_image'] is None:
+                if itrDay.fields("en")["highlighted_image"] is None:
                     missingItineraryImage = True
         except:
-            logging.info('Entry error: %s' % entry.id)
+            logging.info("Entry error: %s" % entry.id)
 
         if missingDestination or missingMap or missingItineraryImage:
-            logging.info('Entry: %s has missing items' % entry.id)
+            logging.info("Entry: %s has missing items" % entry.id)
         else:
-            logging.info('Entry: %s is complete' % entry.id)
+            logging.info("Entry: %s is complete" % entry.id)
         if missingDestination:
-            logging.info('Missing: Destination')
+            logging.info("Missing: Destination")
         if missingMap:
-            logging.info('Missing: Map')
+            logging.info("Missing: Map")
         if missingItineraryImage:
-            logging.info('Missing: Itinerary Day Image')
+            logging.info("Missing: Itinerary Day Image")
     return
+
 
 def run_sync(**kwargs):
     parameter_voyage_ids = kwargs.get("content_ids")
@@ -479,7 +485,7 @@ def run_sync(**kwargs):
 
     # fetch ids that already exist, exclude them from voyage_ids
     # only run script for voyages that don't yet exist
-
+    total_voyages = len(voyage_ids)
     for idx, voyage_id in enumerate(voyage_ids):
         if parameter_voyage_ids is not None:
             # run only included voyages
@@ -495,11 +501,14 @@ def run_sync(**kwargs):
             logging.error(
                 "Voyage migration error with ID: %s, error: %s" % (voyage_id, e)
             )
-            logging.info('Entry %s/%s' % (idx, len(voyage_ids)))
+            logging.info("Entry %s/%s" % (idx, len(voyage_ids)))
             [
                 helpers.remove_entry_id_from_memory(voyage_id, locale)
                 for locale, url in CMS_API_URLS.items()
             ]
+        logging.info("-----------------------------------------------------")
+        logging.info(f"Completed {idx+1}/{total_voyages} Voyages.")
+        logging.info("-----------------------------------------------------")
 
 
 parser = ArgumentParser(

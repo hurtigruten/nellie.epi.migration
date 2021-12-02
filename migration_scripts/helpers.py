@@ -695,8 +695,10 @@ def update_locale_itinerary(**kwargs):
     entry.arrivalTime = fields["arrivalTime"]
     return entry
 
+
 def remove_digits(value):
-    return ''.join(filter(lambda x: not x.isdigit(), value))
+    return "".join(filter(lambda x: not x.isdigit(), value))
+
 
 def update_image_wrapper(**kwargs):
     entry = kwargs["entry"]
@@ -795,7 +797,9 @@ def add_entry(**kwargs):
             return e
 
     try:
-        if (kwargs['content_type_id'] is not 'voyage') and (kwargs['content_type_id'] is not 'itinerary'):
+        if (kwargs["content_type_id"] is not "voyage") and (
+            kwargs["content_type_id"] is not "itinerary"
+        ):
             kwargs["environment"].entries().find(id).publish()
     except Exception as e:
         logging.error(
@@ -913,31 +917,39 @@ class IntListConverter(BaseConverter):
 #     return result
 
 
-
-headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) ' 
-      'AppleWebKit/537.11 (KHTML, like Gecko) '
-      'Chrome/23.0.1271.64 Safari/537.11',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-      'Accept-Encoding': 'none',
-      'Accept-Language': 'en-US,en;q=0.8',
-      'Connection': 'keep-alive'}
-
-req = Request(url = 'https://www.hurtigruten.co.uk/rest/b2b/destinations', headers = headers)
-destinations = json.loads(urlopen(req).read())
-
 def destination_name_to_cf_id(environment, destination_name):
-    destination_entries = environment.entries().all(query={"content_type": 'destination', 'fields.internalName[in]': destination_name})
-    
-    if (len(destination_entries) == 0):
+    destination_entries = environment.entries().all(
+        query={
+            "content_type": "destination",
+            "fields.internalName[in]": destination_name,
+        }
+    )
+
+    if len(destination_entries) == 0:
         return None
     return destination_entries[0].id
 
+
 def destination_epi_id_to_cf_id(environment, epi_id):
-    destination_name = next((d['heading'].strip() for d in destinations if d['id'] == epi_id), None)
+    headers = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) "
+    "AppleWebKit/537.11 (KHTML, like Gecko) "
+    "Chrome/23.0.1271.64 Safari/537.11",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
+    "Accept-Encoding": "none",
+    "Accept-Language": "en-US,en;q=0.8",
+    "Connection": "keep-alive",
+    }
+
+    req = Request(
+        url="https://www.hurtigruten.co.uk/rest/b2b/destinations", headers=headers
+    )
+    destinations = json.loads(urlopen(req).read())
+    destination_name = next(
+        (d["heading"].strip() for d in destinations if d["id"] == epi_id), None
+    )
     if destination_name is None:
         return None
 
-    return destination_name_to_cf_id(environment, destination_name)    
-
-    
+    return destination_name_to_cf_id(environment, destination_name)

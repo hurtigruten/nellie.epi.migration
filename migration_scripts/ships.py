@@ -24,146 +24,232 @@ from os.path import splitext, basename
 from argparse import ArgumentParser
 
 logging.basicConfig(
-    format = '%(asctime)s %(levelname)-8s %(message)s',
-    level = logging.INFO,
-    datefmt = '%Y-%m-%d %H:%M:%S')
+    format="%(asctime)s %(levelname)-8s %(message)s",
+    level=logging.INFO,
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 
 def prepare_environment():
-    logging.info('Setup Contentful environment')
+    logging.info("Setup Contentful environment")
     contentful_environment = helpers.create_contentful_environment(
-        config.CTFL_SPACE_ID, config.CTFL_ENV_ID,
-        config.CTFL_MGMT_API_KEY
+        config.CTFL_SPACE_ID, config.CTFL_ENV_ID, config.CTFL_MGMT_API_KEY
     )
 
-    logging.info('Using Contentful environment: %s' % config.CTFL_ENV_ID)
-    logging.info('Get all ships from Contentful')
-    contentful_ships = contentful_environment.entries().all(query = {"content_type": "ship"})
-    changed_contentful_ships = [ship for ship in contentful_ships if
-                                helpers.skip_entry_if_not_updated(helpers.read_json_data(
-                                    "%s/%s" % ("https://www.hurtigruten.com/rest/b2b/ships", ship.code)), 'en',
-                                                                  ship.id)]
-    logging.info('Number of ships in Contentful: %s' % len(contentful_ships))
-    logging.info('')
-    logging.info('Number of ships changed: %s' % len(changed_contentful_ships))
-    logging.info('-----------------------------------------------------')
-    logging.info('Ship IDs to migrate: ')
-    for ship in changed_contentful_ships:
+    logging.info("Using Contentful environment: %s" % config.CTFL_ENV_ID)
+    logging.info("Get all ships from Contentful")
+    contentful_ships = contentful_environment.entries().all(
+        query={"content_type": "ship", "fields.code": "WW"}
+    )
+    # changed_contentful_ships = [
+    #     ship
+    #     for ship in contentful_ships
+    #     if helpers.skip_entry_if_not_updated(
+    #         helpers.read_json_data(
+    #             "%s/%s" % ("https://www.hurtigruten.com/rest/b2b/ships", ship.code)
+    #         ),
+    #         "en",
+    #         ship.id,
+    #     )
+    # ]
+    logging.info("Number of ships in Contentful: %s" % len(contentful_ships))
+    logging.info("")
+    # logging.info("Number of ships changed: %s" % len(changed_contentful_ships))
+    logging.info("-----------------------------------------------------")
+    logging.info("Ship IDs to migrate: ")
+    for ship in contentful_ships:
         logging.info(ship.id)
-    logging.info('-----------------------------------------------------')
-    logging.info('')
-    return changed_contentful_ships, contentful_environment
+    logging.info("-----------------------------------------------------")
+    logging.info("")
+    return contentful_ships, contentful_environment
 
 
 def update_ship(contentful_environment, ship):
 
     logging.info("Migrating data for ship %s, %s, %s" % (ship.name, ship.id, ship.code))
 
-    ship_data = helpers.read_json_data("%s/%s" % ("https://www.hurtigruten.com/rest/b2b/ships", ship.code))
+    ship_data = helpers.read_json_data(
+        "%s/%s" % ("https://www.hurtigruten.com/rest/b2b/ships", ship.code)
+    )
 
     image_id = "shippic-%s" % ship.code
 
     # add ship image
-    full_image_url = "https://www.hurtigruten.com%s" % ship_data['imageUrl']
+    full_image_url = "https://www.hurtigruten.com%s" % ship_data["imageUrl"]
     ship.images = [
         helpers.add_asset(
-            environment = contentful_environment,
-            asset_uri = full_image_url,
-            id = image_id,
-            title = ship.name)
+            environment=contentful_environment,
+            asset_uri=full_image_url,
+            id=image_id,
+            title=ship.name,
+        )
     ]
 
     try:
         ship.save()
     except Exception as e:
-        logging.error('Ship could not be saved: %s' % image_id)
+        logging.error("Ship could not be saved: %s" % image_id)
 
     try:
         ship.publish()
         logging.info("Ship %s image updated: %s" % (ship.name, image_id))
     except Exception as e:
-        logging.error('Ship image could not be published: %s' % image_id)
+        logging.error("Ship image could not be published: %s" % image_id)
 
     # add cabin categories
-    for cabinCategory in ship_data['cabinCategories']:
-        cabinCategoryCode = "%s-%s" % (ship.code, helpers.extract_first_letters(cabinCategory['title']))
-        helpers.add_entry(
-            environment = contentful_environment,
-            id = cabinCategoryCode,
-            content_type_id = "cabinCategory",
-            fields = helpers.field_localizer(config.DEFAULT_LOCALE, {
-                'code': cabinCategoryCode,
-                'name': cabinCategory['title'],
-                'description': helpers.convert_to_contentful_rich_text(cabinCategory['description'])
-            })
+    for cabinCategory in ship_data["cabinCategories"]:
+        cabinCategoryCode = "%s-%s" % (
+            ship.code,
+            helpers.extract_first_letters(cabinCategory["title"]),
         )
+        helpers.add_entry(
+            environment=contentful_environment,
+            id=cabinCategoryCode,
+            content_type_id="cabinCategory",
+            market=None,
+            fields=helpers.field_localizer(
+                config.DEFAULT_LOCALE,
+                {
+                    "code": cabinCategoryCode,
+                    "name": cabinCategory["title"],
+                    "description": helpers.convert_to_contentful_rich_text(
+                        cabinCategory["description"]
+                    ),
+                },
+                market=None,
+            ),
+        )
+
+    logging.info("Added cabin category")
 
     # add cabin category containers with media and cabin grades if not added already
     cabin_category_container_links = []
     is_links_updated = False
-    for cabinCategory in ship_data['cabinCategories']:
-        cabin_container_id = "cabcatcont-%s-%s" % (ship.code, helpers.extract_first_letters(cabinCategory['title']))
+    for cabinCategory in ship_data["cabinCategories"]:
+        cabin_container_id = "cabcatcont-%s-%s" % (
+            ship.code,
+            helpers.extract_first_letters(cabinCategory["title"]),
+        )
         cabin_category_container_link = {}
 
-        cabCatId = "%s-%s" % (ship.code, helpers.extract_first_letters(cabinCategory['title']))
+        cabCatId = "%s-%s" % (
+            ship.code,
+            helpers.extract_first_letters(cabinCategory["title"]),
+        )
 
         is_links_updated = True
         cabin_category_container_link = helpers.add_entry(
-            environment = contentful_environment,
-            id = "cabcatcont-%s-%s" % (ship.code, helpers.extract_first_letters(cabinCategory['title'])),
-            content_type_id = "cabinCategoryContainer",
-            fields = helpers.field_localizer(config.DEFAULT_LOCALE, {
-                'category': helpers.entry_link(cabCatId),
-                'media': [helpers.add_asset(
-                    environment = contentful_environment,
-                    asset_uri = media_item['highResolutionUri'],
-                    id = "shCabCatPic-%s-%s-%d" % (ship.code, helpers.extract_first_letters(cabinCategory['title']), i),
-                    title = media_item['alternateText']
-                ) for i, media_item in enumerate(cabinCategory['media'])],
-                'cabinGrades': [
-                    helpers.add_entry(
-                        environment = contentful_environment,
-                        id = "cg-%s-%s-%s" % (
-                            ship.code, helpers.extract_first_letters(cabinCategory['title']), cabinGrade['code'].replace(' ', '')
-                        ),
-                        content_type_id = "cabinGrade",
-                        fields = helpers.field_localizer(config.DEFAULT_LOCALE, {
-                            'code': cabinGrade['code'].replace(' ', ''),
-                            'name': cabinGrade['title'],
-                            'shortDescription': helpers.convert_to_contentful_rich_text(cabinGrade['shortDescription']),
-                            'longDescription': helpers.convert_to_contentful_rich_text(cabinGrade['longDescription']),
-                            'extraInformation': helpers.convert_to_contentful_rich_text(cabinGrade['extraInformation']),
-                            'sizeFrom': cabinGrade['sizeFrom'],
-                            'sizeTo': cabinGrade['sizeTo'],
-                            'features': [x for x in [
-                                'bathroom' if cabinGrade['hasBathroom'] else None,
-                                'balcony' if cabinGrade['hasBalcony'] else None,
-                                'sofa' if cabinGrade['hasSofa'] else None,
-                                'tv' if cabinGrade['hasTv'] else None,
-                                'dinnerTable' if cabinGrade['hasDinnerTable'] else None] if x is not None],
-                            'bed': helpers.add_entry_with_code_if_not_exist(
-                                contentful_environment, "bed",
-                                cabinGrade['bed']),
-                            'window': helpers.add_entry_with_code_if_not_exist(
-                                contentful_environment, "window",
-                                cabinGrade['window']),
-                            'isSpecial': cabinGrade['isSpecial'],
-                            'media': [
-                                helpers.add_asset(
-                                    environment = contentful_environment,
-                                    asset_uri = image_url,
-                                    id = "shCabGr-%s-%s-%i" % (ship.code, cabinGrade['code'].replace(' ', ''), i),
-                                    title = helpers.clean_asset_name(
-                                        splitext(basename(urlparse(image_url).path))[0],
-                                        "shCabGr-%s-%s-%i" % (ship.code, cabinGrade['code'].replace(' ', ''), i)
-                                    )
-                                )
-                                for i, image_url in enumerate(cabinGrade['cabinGradeImages'])]
-                        })
-                    )
-                    for cabinGrade in cabinCategory['cabinGrades']
-                ]
-            })
+            environment=contentful_environment,
+            market=None,
+            id="cabcatcont-%s-%s"
+            % (ship.code, helpers.extract_first_letters(cabinCategory["title"])),
+            content_type_id="cabinCategoryContainer",
+            fields=helpers.field_localizer(
+                config.DEFAULT_LOCALE,
+                {
+                    "category": helpers.entry_link(cabCatId),
+                    "media": [
+                        helpers.add_asset(
+                            environment=contentful_environment,
+                            asset_uri=media_item["highResolutionUri"],
+                            id="shCabCatPic-%s-%s-%d"
+                            % (
+                                ship.code,
+                                helpers.extract_first_letters(cabinCategory["title"]),
+                                i,
+                            ),
+                            title=media_item["alternateText"],
+                        )
+                        for i, media_item in enumerate(cabinCategory["media"])
+                    ],
+                    "cabinGrades": [
+                        helpers.add_entry(
+                            environment=contentful_environment,
+                            market=None,
+                            id="cg-%s-%s-%s"
+                            % (
+                                ship.code,
+                                helpers.extract_first_letters(cabinCategory["title"]),
+                                cabinGrade["code"].replace(" ", ""),
+                            ),
+                            content_type_id="cabinGrade",
+                            fields=helpers.field_localizer(
+                                config.DEFAULT_LOCALE,
+                                {
+                                    "code": cabinGrade["code"].replace(" ", ""),
+                                    "name": cabinGrade["title"],
+                                    "shortDescription": helpers.convert_to_contentful_rich_text(
+                                        cabinGrade["shortDescription"]
+                                    ),
+                                    "longDescription": helpers.convert_to_contentful_rich_text(
+                                        cabinGrade["longDescription"]
+                                    ),
+                                    "extraInformation": helpers.convert_to_contentful_rich_text(
+                                        cabinGrade["extraInformation"]
+                                    ),
+                                    "sizeFrom": cabinGrade["sizeFrom"],
+                                    "sizeTo": cabinGrade["sizeTo"],
+                                    "features": [
+                                        x
+                                        for x in [
+                                            "bathroom"
+                                            if cabinGrade["hasBathroom"]
+                                            else None,
+                                            "balcony"
+                                            if cabinGrade["hasBalcony"]
+                                            else None,
+                                            "sofa" if cabinGrade["hasSofa"] else None,
+                                            "tv" if cabinGrade["hasTv"] else None,
+                                            "dinnerTable"
+                                            if cabinGrade["hasDinnerTable"]
+                                            else None,
+                                        ]
+                                        if x is not None
+                                    ],
+                                    "bed": helpers.add_entry_with_code_if_not_exist(
+                                        contentful_environment, "bed", cabinGrade["bed"]
+                                    ),
+                                    "window": helpers.add_entry_with_code_if_not_exist(
+                                        contentful_environment,
+                                        "window",
+                                        cabinGrade["window"],
+                                    ),
+                                    "isSpecial": cabinGrade["isSpecial"],
+                                    "media": [
+                                        helpers.add_asset(
+                                            environment=contentful_environment,
+                                            asset_uri=image_url,
+                                            id="shCabGr-%s-%s-%i"
+                                            % (
+                                                ship.code,
+                                                cabinGrade["code"].replace(" ", ""),
+                                                i,
+                                            ),
+                                            title=helpers.clean_asset_name(
+                                                splitext(
+                                                    basename(urlparse(image_url).path)
+                                                )[0],
+                                                "shCabGr-%s-%s-%i"
+                                                % (
+                                                    ship.code,
+                                                    cabinGrade["code"].replace(" ", ""),
+                                                    i,
+                                                ),
+                                            ),
+                                        )
+                                        for i, image_url in enumerate(
+                                            cabinGrade["cabinGradeImages"]
+                                        )
+                                    ],
+                                },
+                                market=None,
+                            ),
+                        )
+                        for cabinGrade in cabinCategory["cabinGrades"]
+                    ],
+                },
+                market=None,
+            ),
         )
 
         cabin_category_container_links.append(cabin_category_container_link)
@@ -174,38 +260,49 @@ def update_ship(contentful_environment, ship):
         try:
             ship.save()
         except Exception as e:
-            logging.error('Could not save ship cabin categories with name: %s, error: %s' % (ship.name, e))
+            logging.error(
+                "Could not save ship cabin categories with name: %s, error: %s"
+                % (ship.name, e)
+            )
 
         try:
             ship.publish()
-            logging.info('Ship %s cabin categories updated' % ship.name)
+            logging.info("Ship %s cabin categories updated" % ship.name)
         except Exception as e:
-            logging.error('Could not publish ship cabin categories with name: %s, error: %s' % (ship.name, e))
+            logging.error(
+                "Could not publish ship cabin categories with name: %s, error: %s"
+                % (ship.name, e)
+            )
 
     # add deck plans if not added already
     deck_plan_links = []
     is_deck_plans_updated = False
-    for deck in ship_data['decks']:
-        deck_number = int(deck['number'])
+    for deck in ship_data["decks"]:
+        deck_number = int(deck["number"])
         deck_plan_id = "dplan-%s-%d" % (ship.code, deck_number)
 
         is_deck_plans_updated = True
         deck_plan_link = helpers.add_entry(
-            environment = contentful_environment,
-            id = deck_plan_id,
-            content_type_id = "deckPlan",
-            fields = helpers.field_localizer(config.DEFAULT_LOCALE, {
-                "deck": deck_number,
-                "plan": helpers.add_asset(
-                    environment = contentful_environment,
-                    asset_uri = deck['deck']['highResolutionUri'],
-                    id = "deckPic-%s-%d" % (ship.code, deck_number),
-                    title = helpers.clean_asset_name(
-                        deck['deck']['alternateText'],
-                        "deckPic-%s-%d" % (ship.code, deck_number)
-                    )
-                )
-             })
+            environment=contentful_environment,
+            market=None,
+            id=deck_plan_id,
+            content_type_id="deckPlan",
+            fields=helpers.field_localizer(
+                config.DEFAULT_LOCALE,
+                {
+                    "deck": deck_number,
+                    "plan": helpers.add_asset(
+                        environment=contentful_environment,
+                        asset_uri=deck["deck"]["highResolutionUri"],
+                        id="deckPic-%s-%d" % (ship.code, deck_number),
+                        title=helpers.clean_asset_name(
+                            deck["deck"]["alternateText"],
+                            "deckPic-%s-%d" % (ship.code, deck_number),
+                        ),
+                    ),
+                },
+                market=None,
+            ),
         )
 
         deck_plan_links.append(deck_plan_link)
@@ -215,27 +312,34 @@ def update_ship(contentful_environment, ship):
         try:
             ship.save()
         except Exception as e:
-            logging.error('Could not save ship deck plans with name: %s, error: %s' % (ship.name, e))
+            logging.error(
+                "Could not save ship deck plans with name: %s, error: %s"
+                % (ship.name, e)
+            )
         try:
             ship.publish()
-            logging.info('Ship %s deck plans updated' % ship.name)
+            logging.info("Ship %s deck plans updated" % ship.name)
         except Exception as e:
-            logging.error('Could not publish ship deck plans with name: %s, error: %s' % (ship.name, e))
+            logging.error(
+                "Could not publish ship deck plans with name: %s, error: %s"
+                % (ship.name, e)
+            )
 
     if is_deck_plans_updated and is_links_updated:
-        helpers.update_entry_database(ship.id, 'en')
+        helpers.update_entry_database(ship.id, "en")
+
 
 def run_sync(**kwargs):
-    ship_ids = kwargs.get('content_ids')
-    include = kwargs.get('include')
+    ship_ids = kwargs.get("content_ids")
+    include = kwargs.get("include")
     if ship_ids is not None:
         if include:
-            logging.info('Running ship sync on specified IDs: %s' % ship_ids)
-            helpers.prepare_included_environment(ship_ids, 'en')
+            logging.info("Running ship sync on specified IDs: %s" % ship_ids)
+            helpers.prepare_included_environment(ship_ids, "en")
         else:
-            logging.info('Running ship sync, skipping IDs: %s' % ship_ids)
+            logging.info("Running ship sync, skipping IDs: %s" % ship_ids)
     else:
-        logging.info('Running ships sync')
+        logging.info("Running ships sync")
     ships, contentful_environment = prepare_environment()
     for ship in ships:
         if ship_ids is not None:
@@ -248,18 +352,27 @@ def run_sync(**kwargs):
         try:
             update_ship(contentful_environment, ship)
         except Exception as e:
-            logging.error('Ship migration error with ID: %s, error: %s' % (ship.id, e))
-            helpers.remove_entry_id_from_memory(ship.id, 'en')
+            logging.error("Ship migration error with ID: %s, error: %s" % (ship.id, e))
+            helpers.remove_entry_id_from_memory(ship.id, "en")
 
 
-parser = ArgumentParser(prog = 'ships.py', description = 'Run ship sync between Contentful and EPI')
-parser.add_argument("-ids", "--content_ids", nargs='+', type=int, help = "Provide ship IDs")
-parser.add_argument("-include", "--include", nargs='?', type=helpers.str2bool,
-                    help = "Specify if you want to include or exclude ship IDs")
+parser = ArgumentParser(
+    prog="ships.py", description="Run ship sync between Contentful and EPI"
+)
+parser.add_argument(
+    "-ids", "--content_ids", nargs="+", type=int, help="Provide ship IDs"
+)
+parser.add_argument(
+    "-include",
+    "--include",
+    nargs="?",
+    type=helpers.str2bool,
+    help="Specify if you want to include or exclude ship IDs",
+)
 args = parser.parse_args()
 
 
-if __name__ == '__main__':
-    ids = vars(args)['content_ids']
-    include = vars(args)['include']
+if __name__ == "__main__":
+    ids = vars(args)["content_ids"]
+    include = vars(args)["include"]
     run_sync(**{"content_ids": ids, "include": include})
