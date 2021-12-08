@@ -797,10 +797,10 @@ def add_entry(**kwargs):
             return e
 
     try:
-        if (kwargs["content_type_id"] is not "voyage") and (
-            kwargs["content_type_id"] is not "itinerary"
-        ):
-            kwargs["environment"].entries().find(id).publish()
+        kwargs["environment"].entries().find(id).publish()
+        # if (kwargs["content_type_id"] is not "voyage") and (
+        #     # kwargs["content_type_id"] is not "itinerary"
+        # ):
     except Exception as e:
         logging.error(
             "Exception occurred while publishing entry with ID: %s, error: %s" % (id, e)
@@ -931,25 +931,17 @@ def destination_name_to_cf_id(environment, destination_name):
 
 
 def destination_epi_id_to_cf_id(environment, epi_id):
-    headers = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) "
-    "AppleWebKit/537.11 (KHTML, like Gecko) "
-    "Chrome/23.0.1271.64 Safari/537.11",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
-    "Accept-Encoding": "none",
-    "Accept-Language": "en-US,en;q=0.8",
-    "Connection": "keep-alive",
-    }
+    respone = requests.get("https://www.hurtigruten.co.uk/rest/b2b/destinations")
+    if not respone.ok:
+        return
+    destinations = respone.json()
+    target_destinations_name = [
+        destination["heading"]
+        for destination in destinations
+        if destination["id"] == epi_id
+    ][0]
+    if target_destinations_name == "West Africa & Cape Verde":
+        target_destinations_name = "West Africa and Cape Verde"
+    return destination_name_to_cf_id(environment, target_destinations_name)
 
-    req = Request(
-        url="https://www.hurtigruten.co.uk/rest/b2b/destinations", headers=headers
-    )
-    destinations = json.loads(urlopen(req).read())
-    destination_name = next(
-        (d["heading"].strip() for d in destinations if d["id"] == epi_id), None
-    )
-    if destination_name is None:
-        return None
 
-    return destination_name_to_cf_id(environment, destination_name)
