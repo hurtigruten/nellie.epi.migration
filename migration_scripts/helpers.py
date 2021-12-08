@@ -770,7 +770,6 @@ def add_entry(**kwargs):
             else:
                 entry.update(entry_attributes)
             entry.save()
-            logging.info("Entry updated: %s" % id)
         except Exception as e:
             logging.error(
                 "Exception occurred while trying to update entry with ID: %s, error: %s"

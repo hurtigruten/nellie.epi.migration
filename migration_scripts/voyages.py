@@ -228,16 +228,16 @@ def update_voyage(contentful_environment, voyage_id, market):
     # for locale, entry in voyage_detail_by_locale.items():
     #     entry["mediaContent"["alternateText"]
 
-    # image_gallery_id = ""
-    # image_wrapper_links = []
-    # for i, media_item in enumerate(default_voyage_detail["mediaContent"]):
-    #     media_link = helpers.add_or_reuse_asset(
-    #         environment=contentful_environment,
-    #         asset_uri=media_item["highResolutionUri"],
-    #         id=media_item["id"],
-    #         title=media_item["alternateText"],
-    #     )
-    #     image_gallery_id += media_item["id"]
+    image_gallery_id = ""
+    image_wrapper_links = []
+    for i, media_item in enumerate(default_voyage_detail["mediaContent"]):
+        media_link = helpers.add_or_reuse_asset(
+            environment=contentful_environment,
+            asset_uri=media_item["highResolutionUri"],
+            id=media_item["id"],
+            title=media_item["alternateText"],
+        )
+        image_gallery_id += media_item["id"]
 
     #     image_wrapper_link = helpers.add_entry(
     #         environment=contentful_environment,
@@ -424,7 +424,7 @@ def update_voyage(contentful_environment, voyage_id, market):
                         # "includedFeatures": skip,
                         # "teamInformation": skip,
                         # "practicalInformation": skip,
-                        # "images": image_gallery_link,
+                        #"images": image_gallery_link,
                     },
                     market,
                 )
