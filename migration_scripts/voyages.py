@@ -228,16 +228,16 @@ def update_voyage(contentful_environment, voyage_id, market):
     # for locale, entry in voyage_detail_by_locale.items():
     #     entry["mediaContent"["alternateText"]
 
-    image_gallery_id = ""
-    image_wrapper_links = []
-    for i, media_item in enumerate(default_voyage_detail["mediaContent"]):
-        media_link = helpers.add_or_reuse_asset(
-            environment=contentful_environment,
-            asset_uri=media_item["highResolutionUri"],
-            id=media_item["id"],
-            title=media_item["alternateText"],
-        )
-        image_gallery_id += media_item["id"]
+    # image_gallery_id = ""
+    # image_wrapper_links = []
+    # for i, media_item in enumerate(default_voyage_detail["mediaContent"]):
+    #     media_link = helpers.add_or_reuse_asset(
+    #         environment=contentful_environment,
+    #         asset_uri=media_item["highResolutionUri"],
+    #         id=media_item["id"],
+    #         title=media_item["alternateText"],
+    #     )
+    #     image_gallery_id += media_item["id"]
 
     #     image_wrapper_link = helpers.add_entry(
     #         environment=contentful_environment,
@@ -396,7 +396,7 @@ def update_voyage(contentful_environment, voyage_id, market):
                         # "map": map_wrapper_link,
                         # "highlightedImage": image_wrapper_links[-1],
                         # "slug": extract_slug(voyage_detail["url"]),
-                        "bookingCode": voyage_detail["travelSuggestionCodes"],
+                        # "bookingCode": voyage_detail["travelSuggestionCodes"],
                         # "shortDescription": helpers.convert_to_contentful_rich_text(
                         #     voyage_detail["itineraryOneLiner"]
                         # ),
@@ -424,7 +424,8 @@ def update_voyage(contentful_environment, voyage_id, market):
                         # "includedFeatures": skip,
                         # "teamInformation": skip,
                         # "practicalInformation": skip,
-                        #"images": image_gallery_link,
+                        # "images": image_gallery_link,
+                        "bookable": voyage_detail["isBookable"],
                     },
                     market,
                 )
