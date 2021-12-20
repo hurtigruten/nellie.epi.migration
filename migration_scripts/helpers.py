@@ -750,6 +750,9 @@ def add_entry(**kwargs):
     entry_exist = is_entry_exists(kwargs["environment"], id)
 
     # logging.info(f"Attempting to create entry with fields: {fields}")
+    if entry_exist and kwargs["content_type_id"] == "imageGallery":
+        logging.info(f"Image gallery with ID {id} already exists, not creating new one")
+        return entry_link(id)
 
     if entry_exist:
         try:
@@ -942,5 +945,3 @@ def destination_epi_id_to_cf_id(environment, epi_id):
     if target_destinations_name == "West Africa & Cape Verde":
         target_destinations_name = "West Africa and Cape Verde"
     return destination_name_to_cf_id(environment, target_destinations_name)
-
-
