@@ -9,6 +9,8 @@ and then imported from Episerver by this script.
 import config
 import helpers
 import logging
+import unicodedata
+import re
 from argparse import ArgumentParser
 
 logging.basicConfig(
@@ -108,32 +110,32 @@ def update_program(contentful_environment, program_id):
     #                 for locale, locale_voyage_detail in voyage_detail_by_locale_itineraries.items()
 
     #image_gallery_id = "program-gallery-%s-" % str(program_id)
-    image_wrapper_links = []
-    for i, media_item in enumerate(default_program["mediaContent"]):
-        media_link = helpers.add_or_reuse_asset(
-            environment=contentful_environment,
-            asset_uri=media_item["highResolutionUri"],
-            id=media_item["id"],
-            title=media_item["alternateText"],
-        )
-        #image_gallery_id += media_item["id"]
+    #image_wrapper_links = []
+    #for i, media_item in enumerate(default_program["mediaContent"]):
+    #    media_link = helpers.add_or_reuse_asset(
+    #        environment=contentful_environment,
+    #        asset_uri=media_item["highResolutionUri"],
+    #        id=media_item["id"],
+    #        title=media_item["alternateText"],
+    #    )
+        #image_gallery_id += media_item["id"]#
 
-        image_wrapper_link = helpers.add_entry(
-            environment=contentful_environment,
-            id=media_item["id"],
-            content_type_id="imageWrapper",
-            market=None,
-            fields=helpers.merge_localized_dictionaries( *(helpers.field_localizer(
-                locale,
-                {
-                    "internalName": locale_program["mediaContent"][i]["alternateText"],
-                    "image": media_link,
-                    "additionalMetadata": locale_program["mediaContent"][i]["alternateText"]
-                },
-                None,
-            ) for locale, locale_program in program_by_locale.items()))
-        )
-        image_wrapper_links.append(image_wrapper_link)
+    #    image_wrapper_link = helpers.add_entry(
+    #        environment=contentful_environment,
+    #        id=media_item["id"],
+    #        content_type_id="imageWrapper",
+    #        market=None,
+    #        fields=helpers.merge_localized_dictionaries( *(helpers.field_localizer(
+    #            locale,
+    #            {
+    #                "internalName": locale_program["mediaContent"][i]["alternateText"],
+    #                "image": media_link,
+    #                "additionalMetadata": locale_program["mediaContent"][i]["alternateText"]
+    #            },
+    #            None,
+    #        ) for locale, locale_program in program_by_locale.items()))
+    #    )
+    #    image_wrapper_links.append(image_wrapper_link)
 
     #image_gallery_id += "_gallery"
 
@@ -185,6 +187,10 @@ def update_program(contentful_environment, program_id):
 
     destination_ids = list(filter(None, [helpers.destination_name_to_cf_id(contentful_environment, d) for d in default_program.get('destinations')]))
     destination_links = [helpers.entry_link(di) for di in destination_ids]
+    
+    slug = (program.get("heading") or program.get("title")).lower().strip().replace(' ', '-')
+    slug = re.sub(r'[^a-zA-Z0-9-_]+', '', slug)
+    slug = unicodedata.normalize('NFD', slug).encode('ascii', 'ignore').decode('utf8')
 
     helpers.add_entry(
         environment = contentful_environment,
@@ -193,23 +199,24 @@ def update_program(contentful_environment, program_id):
         market = None,
         fields = helpers.merge_localized_dictionaries(*(
             helpers.field_localizer(locale, {
-                'internalName': program.get('heading') or program.get('title'),
-                'name': program.get('heading') or program.get('title'),
-                'introduction': program.get('intro'),
-                'description': helpers.convert_to_contentful_rich_text(program.get('body') or program.get('summary') or default_program.get('body')),
-                'practicalInformation': helpers.convert_to_contentful_rich_text(program.get('secondaryBody')) if program.get('secondaryBody') else None,
-                'years': [year['text'] for year in program.get('years') or []],
-                'seasons': [season_dict[season['id']] for season in program['seasons']],
-                'destinations': destination_links,
-                'durationHours': program.get('durationHours'),
-                'durationDays': program.get('durationDays'),
-                'bookingCode': program.get('bookingCode') or program.get('code'),
-                'sellingPoints': list(filter(None, program.get('sellingPoints') or [])),
-                'price': program.get('priceValue') or program.get('price') or 0,
-                'currency': program.get('currency') or helpers.remove_digits(program.get('price') or ''),
-                'minimumNumberOfGuests': program.get('minimumNumberOfGuests'),
-                'maximumNumberOfGuests': program.get('maximumNumberOfGuests'),
-                'media': image_wrapper_links
+                "slug": slug,
+                #'internalName': program.get('heading') or program.get('title'),
+                #'name': program.get('heading') or program.get('title'),
+                #'introduction': program.get('intro'),
+                #'description': helpers.convert_to_contentful_rich_text(program.get('body') or program.get('summary') or default_program.get('body')),
+                #'practicalInformation': helpers.convert_to_contentful_rich_text(program.get('secondaryBody')) if program.get('secondaryBody') else None,
+                #'years': [year['text'] for year in program.get('years') or []],
+                #'seasons': [season_dict[season['id']] for season in program['seasons']],
+                #'destinations': destination_links,
+                #'durationHours': program.get('durationHours'),
+                #'durationDays': program.get('durationDays'),
+                #'bookingCode': program.get('bookingCode') or program.get('code'),
+                #'sellingPoints': list(filter(None, program.get('sellingPoints') or [])),
+                #'price': program.get('priceValue') or program.get('price') or 0,
+                #'currency': program.get('currency') or helpers.remove_digits(program.get('price') or ''),
+                #'minimumNumberOfGuests': program.get('minimumNumberOfGuests'),
+                #'maximumNumberOfGuests': program.get('maximumNumberOfGuests'),
+                #'media': image_wrapper_links
             }, None) for locale, program in program_by_locale.items()
         ))
     )

@@ -9,6 +9,8 @@ and then imported from Episerver by this script.
 import config
 import helpers
 import logging
+import re
+import unicodedata
 from argparse import ArgumentParser
 
 logging.basicConfig(
@@ -43,6 +45,11 @@ season_dict = {
     "8": "Autumn (Sep - Oct)",
 }
 
+
+def relative_url_to_absolute_url(url):
+    if (url[0] == '/'):
+        return 'https://www.hurtigruten.co.uk' + url
+    return url
 
 def prepare_environment():
     logging.info("Setup Contentful environment")
@@ -120,7 +127,7 @@ def update_excursion(contentful_environment, excursion_id):
     image_link = (
         helpers.add_or_reuse_asset(
             environment=contentful_environment,
-            asset_uri=default_excursion["image"]["imageUrl"],
+            asset_uri= relative_url_to_absolute_url(default_excursion["image"]["imageUrl"]),
             id="excp-%s" % default_excursion["id"],
             title=default_excursion["image"]["altText"]
             or default_excursion.get("heading")
@@ -172,7 +179,10 @@ def update_excursion(contentful_environment, excursion_id):
         )
     )
     destination_links = [helpers.entry_link(di) for di in destination_ids]
-
+    slug = (excursion.get("heading") or excursion.get("title")).lower().strip().replace(' ', '-')
+    slug = re.sub(r'[^a-zA-Z0-9-_]+', '', slug)
+    slug = unicodedata.normalize('NFD', slug).encode('ascii', 'ignore').decode('utf8')
+    
     helpers.add_entry(
         environment=contentful_environment,
         id=str(excursion_id),
@@ -183,49 +193,49 @@ def update_excursion(contentful_environment, excursion_id):
                 helpers.field_localizer(
                     locale,
                     {
-                        "internalName": excursion.get("heading")
-                        or excursion.get("title"),
-                        "name": excursion.get("heading") or excursion.get("title"),
-                        "introduction": excursion.get("intro"),
-                        "description": helpers.convert_to_contentful_rich_text(
-                            excursion.get("body")
-                            or excursion.get("summary")
-                            or default_excursion.get("body")
-                        ),
-                        "practicalInformation": helpers.convert_to_contentful_rich_text(
-                            excursion.get("secondaryBody")
-                        )
-                        if excursion.get("secondaryBody")
-                        else None,
-                        "years": [year["text"] for year in excursion["years"]],
-                        "seasons": [
-                            season_dict[season["id"]] for season in excursion["seasons"]
-                        ],
-                        "destinations": destination_links,
-                        "duration": excursion.get("duration")
-                        or excursion.get("durationText"),
-                        "requirements": excursion.get("requirements"),
-                        "difficulty": excursion["physicalLevel"][0]["text"],
-                        "bookingCode": excursion.get("bookingCode")
-                        or excursion.get("code"),
-                        "sellingPoints": list(
-                            filter(None, excursion.get("sellingPoints") or [])
-                        ),
-                        "price": excursion.get("priceValue")
-                        or excursion.get("price")
-                        or 0,
-                        "currency": excursion.get("currency")
-                        or helpers.remove_digits(excursion.get("price") or ""),
-                        "minimumNumberOfGuests": excursion.get("minimumNumberOfGuests"),
-                        "maximumNumberOfGuests": excursion.get("maximumNumberOfGuests"),
-                        "activityCategory": [
-                            activityCategory["text"]
-                            for activityCategory in excursion.get("activityCategory")
-                            or []
-                        ],
-                        "media": [image_wrapper_link]
-                        if image_wrapper_link is not None
-                        else [],
+                        "slug": slug
+                        #"isOnlyBookableOnboard": excursion.get("isOnlyBookableOnboard"),
+                        #"internalName": excursion.get("heading")
+                        #or excursion.get("title"),
+                        #"name": excursion.get("heading") or excursion.get("title"),
+                        #"introduction": excursion.get("intro"),
+                        #"description": helpers.convert_to_contentful_rich_text(
+                        #    excursion.get("body")
+                        #    or excursion.get("summary")
+                        #    or default_excursion.get("body")
+                        #),
+                        #"practicalInformation": helpers.convert_to_contentful_rich_text(
+                        #    excursion.get("secondaryBody")
+                        #)
+                        #if excursion.get("secondaryBody")
+                        #else None,
+                        #"years": [year["text"] for year in excursion["years"]],
+                        #"seasons": [
+                        #    season_dict[season["id"]] for season in excursion["seasons"]
+                        #],
+                        #"destinations": destination_links,
+                        #"duration": excursion.get("duration")
+                        #or excursion.get("durationText"),
+                        #"requirements": excursion.get("requirements"),
+                        #"difficulty": excursion["physicalLevel"][0]["text"],
+                        #"bookingCode": excursion.get("bookingCode")
+                        #or excursion.get("code"),
+                        #"sellingPoints": list(
+                        #    filter(None, excursion.get("sellingPoints") or [])
+                        #),
+                        #"price": excursion.get("priceValue")
+                        #or excursion.get("price")
+                        #or 0,
+                        #"currency": excursion.get("currency")
+                        #or helpers.remove_digits(excursion.get("price") or ""),
+                        #"minimumNumberOfGuests": excursion.get("minimumNumberOfGuests"),
+                        #"maximumNumberOfGuests": excursion.get("maximumNumberOfGuests"),
+                        #"activityCategory": [
+                        #    activityCategory["text"]
+                        #    for activityCategory in excursion.get("activityCategory")
+                        #    or []
+                        #],
+                        #"media": [image_wrapper_link] if image_wrapper_link is not None else [],
                     },
                     None,
                 )
