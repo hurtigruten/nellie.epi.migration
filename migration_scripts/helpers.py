@@ -1,11 +1,14 @@
 import argparse
 import json
+import sys
 import contentful_management
 import requests
 import logging
+import logging.config
 import os
 import config
 from re import split
+from PIL import Image
 from urllib.request import Request, urlopen
 from urllib.parse import urlparse
 from os.path import splitext, basename
@@ -28,6 +31,10 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': True
+})
 
 def read_json_data(url):
     """Read JSON data from URL"""
@@ -151,7 +158,7 @@ def create_lookup_dictionary():
             query="SELECT * FROM entries", enable_cross_partition_query=True
         ):
             prev[item["id"]] = item["value"]
-        logging.info(prev)
+        # logging.info(prev)
 
 
 def create_lookup_id(id, region):
@@ -359,6 +366,7 @@ def create_asset(**kwargs):
         )
     name = "%s%s" % splitext(basename(urlparse(image_url).path))
     asset_type, asset_size = get_asset_type_and_size(image_url)
+    
     asset_attributes = {
         "fields": {
             "title": {config.DEFAULT_LOCALE: clean_asset_name(name, id)},
@@ -371,6 +379,57 @@ def create_asset(**kwargs):
             },
         }
     }
+    
+    IMAGE_SIZE_LIMIT = 15000000
+    if (int(asset_size) >= IMAGE_SIZE_LIMIT):
+        logging.info('Maximum image size exceeded. Size: %s' % asset_size)
+        
+        image_local =  image_url.split('/')[-1]
+        
+        r = requests.get(image_url)
+        with open('/' + image_local, 'wb') as outfile:
+            outfile.write(r.content)
+            
+        img = Image.open('/' + image_local)
+        max_size = (4000, 4000)
+        img.thumbnail(max_size)
+        img.save('optimized_'+image_local)
+        
+        new_image_size = os.stat('optimized_'+image_local).st_size
+        if (new_image_size > IMAGE_SIZE_LIMIT):
+            logging.error('Image scaling unsuccessful, size limit still exceeded. Size: %s, URL: %s' % (sys.getsizeof(img.tobytes()), image_url))
+            return
+        
+        logging.info('Image size after scaling: %s' % new_image_size)
+        
+        image_url = 'optimized_' + image_local
+        
+        try:
+            uclient = contentful_management.Client(config.CTFL_MGMT_API_KEY)
+            uploaded_img = uclient.uploads(config.CTFL_SPACE_ID).create(image_url)
+            asset_attributes = {
+                "fields": {
+                    "title": {config.DEFAULT_LOCALE: clean_asset_name(name, id)},
+                    "file": {
+                        config.DEFAULT_LOCALE: {
+                            "fileName": name,
+                            "uploadFrom": {
+                                "sys": {
+                                    "type": "Link",
+                                    "linkType": "Upload",
+                                    "id": uploaded_img.id
+                                }
+                            },
+                            "contentType": asset_type,
+                        }
+                    },
+                }
+            }
+            
+        except Exception as e:
+            logging.error('Image upload was unsuccessful. URL: %s' % image_url)
+            logging.error(e)
+            return
 
     try:
         kwargs["environment"].assets().create(id, asset_attributes)
@@ -749,14 +808,31 @@ def add_entry(**kwargs):
 
     entry_exist = is_entry_exists(kwargs["environment"], id)
 
+    # if kwargs["content_type_id"] == "voyage" and not entry_exist:
+    #     logging.info('Refusing to create %s' % id)
+    #     return
+    
+    uncreatable_types = ['voyage', 'excursion', 'program']
+    
+    # if entry_exist and kwargs["content_type_id"] in uncreatable_types:
+    #     logging.info('Oops, this %s existed already!' % kwargs["content_type_id"])
+    #     return
+    
     # logging.info(f"Attempting to create entry with fields: {fields}")
     if entry_exist and kwargs["content_type_id"] == "imageGallery":
         logging.info(f"Image gallery with ID {id} already exists, not creating new one")
         return entry_link(id)
+    
+    logging.info('Updating %s' % id)
+    
+    was_published = False
+    
 
     if entry_exist:
         try:
             entry = kwargs["environment"].entries().find(id)
+            
+            was_published = entry.is_published
             if market is not None:
                 if kwargs["content_type_id"] == "voyage":
                     update_locale_voyage(entry=entry, fields=fields, market=market)
@@ -769,11 +845,14 @@ def add_entry(**kwargs):
             elif kwargs["content_type_id"]:
                 for field_name, field_value in fields.items():
                     for locale, locale_value in field_value.items():
+                        if (not locale in entry._fields):
+                            entry._fields[locale] = {}
                         entry._fields[locale][field_name] = locale_value
             else:
                 entry.update(entry_attributes)
             entry.save()
         except Exception as e:
+            print(entry_attributes)
             logging.error(
                 "Exception occurred while trying to update entry with ID: %s, error: %s"
                 % (id, e)
@@ -787,11 +866,16 @@ def add_entry(**kwargs):
                     "content_type_id": kwargs["content_type_id"],
                     "fields": local_fields,
                 }
+                # print(entry_attributes)
                 kwargs["environment"].entries().create(id, entry_attributes)
             else:
+                # print(entry_attributes)
+                # if (kwargs["content_type_id"] == "voyage"):
+                #     print(entry_attributes)
                 kwargs["environment"].entries().create(id, entry_attributes)
             logging.info("Entry created: %s" % id)
         except Exception as e:
+            print(entry_attributes)
             logging.error(
                 "Exception occurred while creating entry with ID: %s, error: %s"
                 % (id, e)
@@ -799,18 +883,41 @@ def add_entry(**kwargs):
             return e
 
     try:
-        kwargs["environment"].entries().find(id).publish()
-        # if (kwargs["content_type_id"] is not "voyage") and (
-        #     # kwargs["content_type_id"] is not "itinerary"
-        # ):
+        entry = kwargs["environment"].entries().find(id)
+        if (entry and was_published):
+            pass
+            # entry.publish()
+            
     except Exception as e:
         logging.error(
             "Exception occurred while publishing entry with ID: %s, error: %s" % (id, e)
         )
+        
+        # if (kwargs["content_type_id"] == "program"):
+        #     entry = kwargs["environment"].entries().find(id)
+        #     oldslug = entry.slug
+        #     entry.slug = oldslug + '-2'
+        #     entry.save()
+        #     entry.publish()
+            
         return e
 
     return entry_link(id)
 
+def get_cf_ship_link_from_ship_code(environment, ship_code):
+    if ship_code == None:
+        return None
+    
+    ship_entries = environment.entries().all(
+        query={
+            "content_type": "ship",
+            "fields.code": ship_code,
+        }
+    )
+
+    if len(ship_entries) == 0:
+        return None
+    return [entry_link(ship_entry.id) for ship_entry in ship_entries]
 
 def field_localizer(locale, field_dict, market):
     """Localize field dictionary for a given locale"""
@@ -938,7 +1045,7 @@ def destination_epi_id_to_cf_id(environment, epi_id):
         return
     destinations = respone.json()
     target_destinations_name = [
-        destination["heading"]
+        destination["heading"].strip()
         for destination in destinations
         if destination["id"] == epi_id
     ][0]

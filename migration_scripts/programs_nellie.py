@@ -19,12 +19,11 @@ logging.basicConfig(
     datefmt = '%Y-%m-%d %H:%M:%S')
 
 CMS_API_URLS = {
-    # "en-US": "https://www.hurtigruten.com/rest/b2b/voyages"
     "en": "https://global.hurtigruten.com/rest/b2b/programs",
-    # "EN-AMERICAS": "https://www.hurtigruten.com/rest/program/programs",
+    "en-US": "https://www.hurtigruten.com/rest/b2b/programs",
     "en-GB": "https://www.hurtigruten.co.uk/rest/b2b/programs",
     "en-AU": "https://www.hurtigruten.com.au/rest/b2b/programs",
-    # "de": "https://www.hurtigruten.de/rest/program/programs",
+    "de-DE": "https://www.hurtigruten.de/rest/b2b/programs",
     # "fr-FR": "https://www.hurtigruten.fr/rest/program/programs"
 }
 
@@ -74,6 +73,17 @@ def prepare_environment():
 
     return epi_program_ids, contentful_environment
 
+def remove_fields_if_fallback(dict, isFallback):
+    if (not isFallback):
+        return dict
+    
+    
+    retain = ["bookingCode", "price", "currency"]
+    
+    out = {}
+    for field in retain:
+        out[field] = dict.get(field)
+    return out
 
 def update_program(contentful_environment, program_id):
     logging.info('Program migration started with ID: %s' % program_id)
@@ -109,35 +119,39 @@ def update_program(contentful_environment, program_id):
     #                 )
     #                 for locale, locale_voyage_detail in voyage_detail_by_locale_itineraries.items()
 
-    #image_gallery_id = "program-gallery-%s-" % str(program_id)
-    #image_wrapper_links = []
-    #for i, media_item in enumerate(default_program["mediaContent"]):
-    #    media_link = helpers.add_or_reuse_asset(
-    #        environment=contentful_environment,
-    #        asset_uri=media_item["highResolutionUri"],
-    #        id=media_item["id"],
-    #        title=media_item["alternateText"],
-    #    )
-        #image_gallery_id += media_item["id"]#
+    image_gallery_id = "program-gallery-%s-" % str(program_id)
+    image_wrapper_links = []
+    media_item = None
+    for i, media_item in enumerate(default_program["mediaContent"]):
+       media_link = helpers.add_or_reuse_asset(
+           environment=contentful_environment,
+           asset_uri=media_item["highResolutionUri"],
+           id=media_item["id"],
+           title=media_item["alternateText"],
+       )
+    image_gallery_id += media_item["id"] if media_item else ''
 
-    #    image_wrapper_link = helpers.add_entry(
-    #        environment=contentful_environment,
-    #        id=media_item["id"],
-    #        content_type_id="imageWrapper",
-    #        market=None,
-    #        fields=helpers.merge_localized_dictionaries( *(helpers.field_localizer(
-    #            locale,
-    #            {
-    #                "internalName": locale_program["mediaContent"][i]["alternateText"],
-    #                "image": media_link,
-    #                "additionalMetadata": locale_program["mediaContent"][i]["alternateText"]
-    #            },
-    #            None,
-    #        ) for locale, locale_program in program_by_locale.items()))
-    #    )
-    #    image_wrapper_links.append(image_wrapper_link)
+    image_wrapper_link = helpers.add_entry(
+        environment=contentful_environment,
+        id=media_item["id"],
+        content_type_id="imageWrapper",
+        market=None,
+        fields=helpers.merge_localized_dictionaries( *(helpers.field_localizer(
+            locale,
+            {
+                "caption": locale_program["mediaContent"][i]["alternateText"],
+                "internalName": locale_program["mediaContent"][i]["alternateText"],
+                "image": media_link,
+                "additionalMetadata": locale_program["mediaContent"][i]["alternateText"]
+            },
+            None,
+        ) for locale, locale_program in program_by_locale.items()))
+    ) if media_item else None
+    
+    if (image_wrapper_link is not None):
+        image_wrapper_links.append(image_wrapper_link)
 
-    #image_gallery_id += "_gallery"
+    # image_gallery_id += "_gallery"
 
     # image_gallery_link = helpers.add_entry(
     #     environment=contentful_environment,
@@ -155,42 +169,45 @@ def update_program(contentful_environment, program_id):
     #     ),
     # )
 
-    # image_link = helpers.add_or_reuse_asset(
-    #     environment=contentful_environment,
-    #     asset_uri=default_program["image"]["imageUrl"],
-    #     id="excp-%s" % default_program['id'],
-    #     title=default_program["image"]["altText"] or default_program.get('heading') or default_program.get('title'),
-    #     file_name=default_program["image"]["altText"] or default_program.get('heading') or default_program.get('title'),
-    # ) if default_program["image"] is not None else None
+    image_link = helpers.add_or_reuse_asset(
+        environment=contentful_environment,
+        asset_uri=default_program["image"]["imageUrl"],
+        id="excp-%s" % default_program['id'],
+        title=default_program["image"]["altText"] or default_program.get('heading') or default_program.get('title'),
+        file_name=default_program["image"]["altText"] or default_program.get('heading') or default_program.get('title'),
+    ) if default_program["image"] is not None else None
     
 
-    # image_wrapper_link = helpers.add_entry(
-    #     environment=contentful_environment,
-    #     id="excp-%s" % default_program['id'],
-    #     content_type_id="imageWrapper",
-    #     market=None,
-    #     fields=helpers.merge_localized_dictionaries(
-    #         *(
-    #             helpers.field_localizer(
-    #                 locale,
-    #                 {
-    #                     "internalName": program["image"]['altText'] if program['image'] is not None else '',
-    #                     "image": image_link,
-    #                     "additionalMetadata": program["image"]['caption'] if program['image'] is not None else '',
-    #                 },
-    #                 None,
-    #             )
-    #             for locale, program in program_by_locale.items()
-    #         )
-    #     ),
-    # ) if image_link is not None else None
+    image_wrapper_link = helpers.add_entry(
+        environment=contentful_environment,
+        id="excp-%s" % default_program['id'],
+        content_type_id="imageWrapper",
+        market=None,
+        fields=helpers.merge_localized_dictionaries(
+            *(
+                helpers.field_localizer(
+                    locale,
+                    {
+                        "caption": program["image"]["altText"] if program["imgae"] is not None else '',
+                        "internalName": program["image"]['altText'] if program['image'] is not None else '',
+                        "image": image_link,
+                        "additionalMetadata": program["image"]['caption'] if program['image'] is not None else '',
+                    },
+                    None,
+                )
+                for locale, program in program_by_locale.items()
+            )
+        ),
+    ) if image_link is not None else None
 
     destination_ids = list(filter(None, [helpers.destination_name_to_cf_id(contentful_environment, d) for d in default_program.get('destinations')]))
     destination_links = [helpers.entry_link(di) for di in destination_ids]
     
-    slug = (program.get("heading") or program.get("title")).lower().strip().replace(' ', '-')
-    slug = re.sub(r'[^a-zA-Z0-9-_]+', '', slug)
-    slug = unicodedata.normalize('NFD', slug).encode('ascii', 'ignore').decode('utf8')
+    def get_slug(program):
+        slug = (program.get("heading") or program.get("title")).lower().strip().replace(' ', '-')
+        slug = re.sub(r'[^a-zA-Z0-9-_]+', '', slug)
+        slug = unicodedata.normalize('NFD', slug).encode('ascii', 'ignore').decode('utf8')
+        return slug
 
     helpers.add_entry(
         environment = contentful_environment,
@@ -198,26 +215,26 @@ def update_program(contentful_environment, program_id):
         content_type_id = "program",
         market = None,
         fields = helpers.merge_localized_dictionaries(*(
-            helpers.field_localizer(locale, {
-                "slug": slug,
-                #'internalName': program.get('heading') or program.get('title'),
-                #'name': program.get('heading') or program.get('title'),
-                #'introduction': program.get('intro'),
-                #'description': helpers.convert_to_contentful_rich_text(program.get('body') or program.get('summary') or default_program.get('body')),
-                #'practicalInformation': helpers.convert_to_contentful_rich_text(program.get('secondaryBody')) if program.get('secondaryBody') else None,
-                #'years': [year['text'] for year in program.get('years') or []],
-                #'seasons': [season_dict[season['id']] for season in program['seasons']],
-                #'destinations': destination_links,
-                #'durationHours': program.get('durationHours'),
-                #'durationDays': program.get('durationDays'),
-                #'bookingCode': program.get('bookingCode') or program.get('code'),
-                #'sellingPoints': list(filter(None, program.get('sellingPoints') or [])),
-                #'price': program.get('priceValue') or program.get('price') or 0,
-                #'currency': program.get('currency') or helpers.remove_digits(program.get('price') or ''),
-                #'minimumNumberOfGuests': program.get('minimumNumberOfGuests'),
-                #'maximumNumberOfGuests': program.get('maximumNumberOfGuests'),
-                #'media': image_wrapper_links
-            }, None) for locale, program in program_by_locale.items()
+            helpers.field_localizer(locale, remove_fields_if_fallback({
+                "slug": get_slug(program),
+                'internalName': program.get('heading') or program.get('title'),
+                'name': program.get('heading') or program.get('title'),
+                'introduction': program.get('intro'),
+                'description': helpers.convert_to_contentful_rich_text(program.get('body') or program.get('summary') or default_program.get('body')),
+                'practicalInformation': helpers.convert_to_contentful_rich_text(program.get('secondaryBody')) if program.get('secondaryBody') else None,
+                'years': [year['text'] for year in program.get('years') or []],
+                'seasons': [season_dict[season['id']] for season in program['seasons']],
+                'destinations': destination_links,
+                'durationHours': program.get('durationHours'),
+                'durationDays': program.get('durationDays'),
+                'bookingCode': program.get('bookingCode') or program.get('code'),
+                'sellingPoints': list(filter(None, program.get('sellingPoints') or [])),
+                'price': program.get('priceValue') or program.get('price') or 0,
+                'currency': program.get('currency') or helpers.remove_digits(program.get('price') or ''),
+                'minimumNumberOfGuests': program.get('minimumNumberOfGuests'),
+                'maximumNumberOfGuests': program.get('maximumNumberOfGuests'),
+                'media': image_wrapper_links
+            }, program["isFallbackContent"] or False), None) for locale, program in program_by_locale.items()
         ))
     )
 
@@ -240,6 +257,57 @@ def run_sync(**kwargs):
     else:
         logging.info('Running programs sync')
     program_ids, contentful_environment = prepare_environment()
+    
+    voyage_urls = {
+        "en": "https://global.hurtigruten.com/rest/b2b/voyages",
+        "en-US": "https://www.hurtigruten.com/rest/b2b/voyages",
+        "en-AU": "https://www.hurtigruten.com.au/rest/b2b/voyages",
+        # "de-DE": "https://www.hurtigruten.de/rest/b2b/voyages",
+        "en-GB": "https://www.hurtigruten.co.uk/rest/b2b/voyages",
+        # "de-CH": "https://www.hurtigruten.ch/rest/b2b/voyages",
+        # "sv-SE": "https://www.hurtigrutenresan.se/rest/b2b/voyages",
+        # "nb-NO": "https://www.hurtigruten.no/rest/b2b/voyages",
+        # "da-DK": "https://www.hurtigruten.dk/rest/b2b/voyages",
+        # "fr-FR": "https://www.hurtigruten.fr/rest/b2b/voyages",
+    }
+
+    # voyage_ids = []
+    # for key, value in voyage_urls.items():
+    #     voyage_ids += [
+    #         voyage["id"]
+    #         for voyage in helpers.read_json_data(value)
+    #         if voyage["isBookable"] and voyage["brandingType"] == "expedition"
+    #     ]
+
+    # voyage_ids = set(voyage_ids)
+    # logging.info('received ids')
+    # logging.info(voyage_ids)
+    
+    # eurls = [
+    #     "https://global.hurtigruten.com/rest/program/voyages/"
+    #     "https://www.hurtigruten.com/rest/program/voyages/"
+    #     "https://www.hurtigruten.com.au/rest/program/voyages/"
+    #     "https://www.hurtigruten.co.uk/rest/program/voyages/"
+    # ]
+    
+    # program_ids = []
+    # for index, voyage_id in enumerate(voyage_ids):
+    #     try:
+    #         eids = []
+    #         for url in eurls:
+    #             teids = helpers.read_json_data(url + str(voyage_id) + "/excursions")
+    #             if (isinstance(teids, list)):
+    #                 eids.extend(teids)
+    #         program_ids.extend(eids)
+    #     except e:
+    #         logging.info('Failed to get excursions for voyage id %s' % voyage_id)
+    #         logging.info(e)
+                
+    # program_ids = list(set(program_ids))
+    # logging.info('Found %s programs to migrate' % len(program_ids))
+    # logging.info(program_ids)
+    
+    
     for idx, program_id in enumerate(program_ids):
         if parameter_program_ids is not None:
             # run only included programs
