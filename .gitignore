@@ -320,3 +320,6 @@ agent-portal-translation/tmp.json
 
 migration_scrips/venv
 env_dev
+
+tools/HtmlToDocx/bin
+tools/HtmlToDocx/obj
