@@ -22,7 +22,7 @@ services:
     networks:
       - app_net
     ports:
-      - 5000:5000
+      - 5001:5001
 
   html-to-rich-text:
     build: html-to-rich-text

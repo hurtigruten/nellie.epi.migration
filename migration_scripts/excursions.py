@@ -6,6 +6,7 @@ same as entry id in Epi. To update excursions they first need to be deleted from
 and then imported from Episerver by this script.
 
 """
+import traceback
 import config
 import helpers
 import logging
@@ -397,6 +398,7 @@ def run_sync(**kwargs):
             update_excursion(contentful_environment, excursion_id)
             logging.info("Updated %s/%s excursions" % (eei, len(excursion_ids)))
         except Exception as e:
+            traceback.print_exc(limit=2)
             logging.error(
                 "Excursion migration error with ID: %s, error: %s" % (excursion_id, e)
             )
