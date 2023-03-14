@@ -22,12 +22,14 @@ logging.basicConfig(
 CMS_API_URLS = {
     "en": "https://global.hurtigruten.com/rest/b2b/excursions",
     "en-US": "https://www.hurtigruten.com/rest/b2b/excursions",
-    "en-GB": "https://www.hurtigruten.co.uk/rest/b2b/excursions",
     "en-AU": "https://www.hurtigruten.com.au/rest/b2b/excursions",
     "de-DE": "https://www.hurtigruten.de/rest/b2b/excursions",
-    "gsw-CH": "https://www.hurtigruten.ch/rest/b2b/voyages",
-    # "de-CH": "https://www.hurtigruten.ch/rest/b2b/excursions",
-    # "fr-FR": "https://www.hurtigruten.fr/rest/excursion/excursions"
+    "en-GB": "https://www.hurtigruten.co.uk/rest/b2b/excursions",
+    "gsw-CH": "https://www.hurtigruten.ch/rest/b2b/excursions",
+    "sv-SE": "https://www.hurtigrutenresan.se/rest/b2b/excursions",
+    "nb-NO": "https://www.hurtigruten.no/rest/b2b/excursions",
+    "da-DK": "https://www.hurtigruten.dk/rest/b2b/excursions",
+    "fr-FR": "https://www.hurtigruten.fr/rest/b2b/excursions",
 }
 excursions_by_locale = {}
 
@@ -60,12 +62,15 @@ def prepare_environment():
     logging.info("Using Contentful environment: %s" % config.CTFL_ENV_ID)
     logging.info(
         "Get all excursions for locales: %s"
-        % (", ".join([key for key, value in CMS_API_URLS.items()]))
+        % (", ".join([key for key, _ in CMS_API_URLS.items()]))
     )
     
-    # cf_es = contentful_environment.entries().all({ 'select': 'sys.id', 'limit': '999', 'content_type': 'excursion' })
-    # cf_eids = [int(es.id) for es in cf_es]
-    
+    try:
+        cf_es = contentful_environment.entries().all({ 'select': 'sys.id', 'limit': '999', 'content_type': 'excursion' })
+        cf_eids = [int(es.id) for es in cf_es if es.id.isnumeric()]
+    except Exception as e:
+        print(e)
+        raise Exception('gggggg')
     # return cf_eids, contentful_environment
 
     excursion_ids = []
@@ -79,31 +84,31 @@ def prepare_environment():
             #if helpers.skip_entry_if_not_updated(excursion, locale, excursion["id"])
         ]
         epi_excursion_ids += [
-            excursion["id"] for excursion in excursions_by_locale[locale]
+            str(excursion["id"]) for excursion in excursions_by_locale[locale]
         ]
-        logging.info(
-            "Number of excursions in EPI: %s for locale: %s"
-            % (len(excursions_by_locale[locale]), locale)
-        )
+        # logging.info(
+        #     "Number of excursions in EPI: %s for locale: %s"
+        #     % (len(excursions_by_locale[locale]), locale)
+        # )
 
-    logging.info("-----------------------------------------------------")
-    logging.info("")
-
-    # Create distinct list
-    excursion_ids = set(excursion_ids)
-    epi_excursion_ids = set(epi_excursion_ids)
-
-    logging.info("Number of migrating excursions: %s" % len(epi_excursion_ids))
+    # logging.info("-----------------------------------------------------")
     # logging.info("")
 
-    # logging.info("Excursion IDs to migrate: ")
-    # for excursion_id in epi_excursion_ids:
-    #     logging.info(excursion_id)
+    # # Create distinct list
+    # excursion_ids = set(excursion_ids)
+    # epi_excursion_ids = set(epi_excursion_ids)
 
-    logging.info("-----------------------------------------------------")
-    logging.info("")
+    # logging.info("Number of migrating excursions: %s" % len(epi_excursion_ids))
+    # # logging.info("")
 
-    return epi_excursion_ids, contentful_environment
+    # # logging.info("Excursion IDs to migrate: ")
+    # # for excursion_id in epi_excursion_ids:
+    # #     logging.info(excursion_id)
+
+    # logging.info("-----------------------------------------------------")
+    # logging.info("")
+
+    return cf_eids, contentful_environment
 
 def remove_fields_if_fallback(dict, isFallback):
     if (not isFallback):
@@ -126,19 +131,24 @@ def update_excursion(contentful_environment, excursion_id):
     excursion_by_locale = {}
 
     for locale, excursions in excursions_by_locale.items():
+        # # Dont overwrite en
+        # if locale == 'en':
+        #     continue
+        
         # Filter down to the one excursion by locale from all the excursions
         excursion = next(
-            (excursion for excursion in excursions if excursion["id"] == excursion_id),
+            (excursion for excursion in excursions if excursion["id"] == int(excursion_id)),
             None,
         )
         if excursion is not None:
             excursion_by_locale[locale] = excursion
 
     default_excursion = excursion_by_locale.get(config.DEFAULT_LOCALE)
-    if (len(excursion_by_locale.keys()) == 1):
+    if (default_excursion is None and len(list(excursion_by_locale.values())) > 0):
         default_excursion = list(excursion_by_locale.values())[0]
 
     if default_excursion is None:
+        logging.info(excursion_by_locale)
         logging.info(
             "Could not find default excursion detail for excursion ID: %s"
             % excursion_id
@@ -162,20 +172,20 @@ def update_excursion(contentful_environment, excursion_id):
         else None
     )
     
-    
+        
     localized_image_wrapper_fields = [
         helpers.field_localizer(
             locale,
             {
-                "caption": excursion["image"]["altText"] or excursion["image"]["caption"],
-                "additionalMetadata": excursion["image"]["caption"]
-                if excursion["image"] is not None
+                "caption": excursion['image'].get('altText') or excursion['image'].get('caption'),
+                "additionalMetadata": excursion["image"].get("caption")
+                if excursion.get('image') is not None
                 else "",
             },
             None,
         )
         for locale, excursion in excursion_by_locale.items()
-    ]
+    ] if image_link is not None else None
     
     
     localized_image_wrapper_fields.append(
@@ -190,7 +200,8 @@ def update_excursion(contentful_environment, excursion_id):
             },
             None,
         )
-    )
+    ) if image_link is not None else None
+    
     
 
     image_wrapper_link = (
@@ -217,7 +228,15 @@ def update_excursion(contentful_environment, excursion_id):
     )
     destination_links = [helpers.entry_link(di) for di in destination_ids]
     
-    def get_slug(exc):   
+    def epi_slug(exc):
+        parts = exc.get('url', '').split('/')
+        parts = list(filter(lambda x: x, parts))
+        slug = parts[-1]
+        return slug
+    
+    def get_slug(exc, locale):   
+        if (locale == 'de-DE' or locale == 'gsw-CH' or True):
+            return epi_slug(exc)
         slug = (exc.get("heading") or exc.get("title")).lower().strip().replace(' ', '-')
         slug = re.sub(r'[^a-zA-Z0-9-_]+', '', slug)
         slug = unicodedata.normalize('NFD', slug).encode('ascii', 'ignore').decode('utf8')
@@ -227,10 +246,9 @@ def update_excursion(contentful_environment, excursion_id):
         helpers.field_localizer(
             locale,
             remove_fields_if_fallback({
-                "slug": get_slug(excursion),
+                "slug": epi_slug(excursion),
+                # "slug": get_slug(excursion, locale),
                 "isOnlyBookableOnboard": excursion.get("isOnlyBookableOnboard"),
-                # "internalName": excursion.get("heading")
-                # or excursion.get("title"),
                 "name": excursion.get("heading") or excursion.get("title"),
                 "introduction": excursion.get("intro"),
                 "description": helpers.convert_to_contentful_rich_text(
@@ -243,11 +261,6 @@ def update_excursion(contentful_environment, excursion_id):
                 )
                 if excursion.get("secondaryBody")
                 else None,
-                # "years": [year["text"] for year in excursion["years"]],
-                # "seasons": [
-                #     season_dict[season["id"]] for season in excursion["seasons"]
-                # ],
-                "destinations": destination_links,
                 "duration": excursion.get("duration")
                 or excursion.get("durationText"),
                 "requirements": excursion.get("requirements"),
@@ -260,8 +273,7 @@ def update_excursion(contentful_environment, excursion_id):
                 "price": excursion.get("priceValue") or excursion.get("price") or 0,
                 "currency": excursion.get("currency")
                 or helpers.remove_digits(excursion.get("price") or ""),
-                # "minimumNumberOfGuests": excursion.get("minimumNumberOfGuests"),
-                # "maximumNumberOfGuests": excursion.get("maximumNumberOfGuests"),
+ 
                 "activityCategory": [
                     re.sub(r'\s+', '', activityCategory["text"])
                     for activityCategory in excursion.get("activityCategory")
@@ -321,71 +333,10 @@ def run_sync(**kwargs):
             )
     else:
         logging.info("Running excursions sync")
-    excursion_ids, contentful_environment = prepare_environment()
-    
-    # logging.info('recvd ids', excursion_ids)
-    voyage_urls = {
-    "en": "https://global.hurtigruten.com/rest/b2b/voyages",
-    "en-US": "https://www.hurtigruten.com/rest/b2b/voyages",
-    "en-AU": "https://www.hurtigruten.com.au/rest/b2b/voyages",
-    "de-DE": "https://www.hurtigruten.de/rest/b2b/voyages",
-    "en-GB": "https://www.hurtigruten.co.uk/rest/b2b/voyages",
-    "gsw-CH": "https://www.hurtigruten.ch/rest/b2b/voyages",
-    # "sv-SE": "https://www.hurtigrutenresan.se/rest/b2b/voyages",
-    # "nb-NO": "https://www.hurtigruten.no/rest/b2b/voyages",
-    # "da-DK": "https://www.hurtigruten.dk/rest/b2b/voyages",
-    # "fr-FR": "https://www.hurtigruten.fr/rest/b2b/voyages",
-}
+    epi_excursion_ids, contentful_environment = prepare_environment()
+    epi_excursion_ids = [str(i) for i in epi_excursion_ids]
 
-    # voyage_ids = []
-    # for key, value in voyage_urls.items():
-    #     voyage_ids += [
-    #         voyage["id"]
-    #         for voyage in helpers.read_json_data(value)
-    #         if voyage["isBookable"] and voyage["brandingType"] == "expedition"
-    #     ]
-        
-    # # Force-add excursions for these voyages(eg unbookable ones)
-    # extra_voyage_ids = [97254, 97310, 97327, 97273]
-    # voyage_ids.extend(extra_voyage_ids)
-    
-    # voyage_ids = set(voyage_ids)
-    
-    
-    # logging.info('received ids')
-    # logging.info(voyage_ids)
-    
-    # eurls = [
-    #     "https://global.hurtigruten.com/rest/excursion/voyages/"
-    #     "https://www.hurtigruten.com/rest/excursion/voyages/"
-    #     "https://www.hurtigruten.com.au/rest/excursion/voyages/"
-    #     "https://www.hurtigruten.co.uk/rest/excursion/voyages/"
-    # ]
-    
-    # excursion_ids = []
-    # for index, voyage_id in enumerate(voyage_ids):
-    #     try:
-    #         eids = []
-    #         for url in eurls:
-    #             teids = helpers.read_json_data(url + str(voyage_id) + "/excursions")
-    #             if (isinstance(teids, list)):
-    #                 eids.extend(teids)
-    #         excursion_ids.extend(eids)
-    #     except:
-    #         logging.info('Failed to get excursions for voyage id %s' % voyage_id)
-        
-    # excursion_ids = list(set(excursion_ids))
-    
-    # existing_eids_raw = contentful_environment.find('excursion').all({'select': 'sys.id'}).items
-    # existing_eids = set([e.id for e in existing_eids_raw])
-    
-    # excursion_ids = excursion_ids.difference(existing_eids)
-    # excursion_ids = list(excursion_ids)
-    
-    # logging.info('Found %s excursions to migrate' % len(excursion_ids))
-    # logging.info(excursion_ids)
-
-    for eei, excursion_id in enumerate(excursion_ids):
+    for eei, excursion_id in enumerate(parameter_excursion_ids):
         if parameter_excursion_ids is not None:
             # run only included excursions
             if include and excursion_id not in parameter_excursion_ids:
@@ -395,7 +346,7 @@ def run_sync(**kwargs):
                 continue
         try:
             update_excursion(contentful_environment, excursion_id)
-            logging.info("Updated %s/%s excursions" % (eei, len(excursion_ids)))
+            logging.info("Updated %s/%s excursions" % (eei, len(parameter_excursion_ids)))
         except Exception as e:
             logging.error(
                 "Excursion migration error with ID: %s, error: %s" % (excursion_id, e)

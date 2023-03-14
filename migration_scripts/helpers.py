@@ -454,6 +454,11 @@ def create_asset(**kwargs):
             "Exception occurred while processing asset with ID: %s, error: %s" % (id, e)
         )
         return e
+    
+    # try:
+    #     asset.publish()
+    # except Exception as e:
+    #     logging.error("Exception occured while publishing asset with ID: %s, error: %s" % (id, e))
 
     logging.info("Asset added: %s" % id)
 
@@ -564,9 +569,13 @@ def add_asset(**kwargs):
         contentful_image_bytes = 0
 
         if asset_file is not None and asset_url is not None:
-            resp = requests.get("http:" + asset_url, stream=True)
-            contentful_image_bytes = resp.headers["Content-length"]
-            resp.close()
+            try:
+                resp = requests.get("http:" + asset_url, stream=True)
+                contentful_image_bytes = resp.headers["Content-length"]
+                resp.close()
+            except:
+                logging.error('Unable to read image size, assuming different...')
+                contentful_image_bytes = -1
         else:
             logging.error("Could not determine asset url")
 
@@ -629,6 +638,9 @@ def add_asset(**kwargs):
             asset_url = asset_file["url"]
         except Exception as e:
             logging.error("Asset url is not available: %s" % e)
+            
+        if not asset_url:
+            continue
 
         contentful_image_bytes = 0
         if asset_file is not None and asset_url is not None:
@@ -884,7 +896,7 @@ def add_entry(**kwargs):
 
     try:
         entry = kwargs["environment"].entries().find(id)
-        if (entry and was_published):
+        if (entry):
             pass
             # entry.publish()
             
@@ -952,6 +964,7 @@ def merge_localized_dictionaries(*args):
                 merged[field_name] = new_locale_dict
             else:
                 merged[field_name] = locale_pair
+
     return merged
 
 

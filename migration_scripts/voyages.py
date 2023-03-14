@@ -15,6 +15,8 @@ import logging
 import json
 from argparse import ArgumentParser
 from typing import List
+import linecache
+import sys
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s %(message)s",
@@ -22,17 +24,26 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+def PrintException():
+    exc_type, exc_obj, tb = sys.exc_info()
+    f = tb.tb_frame
+    lineno = tb.tb_lineno
+    filename = f.f_code.co_filename
+    linecache.checkcache(filename)
+    line = linecache.getline(filename, lineno, f.f_globals)
+    print('EXCEPTION IN ({}, LINE {} "{}"): {}'.format(filename, lineno, line.strip(), exc_obj))
+
 CMS_API_URLS = {
     "en": "https://global.hurtigruten.com/rest/b2b/voyages",
     "en-US": "https://www.hurtigruten.com/rest/b2b/voyages",
     "en-AU": "https://www.hurtigruten.com.au/rest/b2b/voyages",
-    "de-DE": "https://www.hurtigruten.de/rest/b2b/voyages",
     "en-GB": "https://www.hurtigruten.co.uk/rest/b2b/voyages",
+    "de-DE": "https://www.hurtigruten.de/rest/b2b/voyages",
     "gsw-CH": "https://www.hurtigruten.ch/rest/b2b/voyages",
-    # "sv-SE": "https://www.hurtigrutenresan.se/rest/b2b/voyages",
-    # "nb-NO": "https://www.hurtigruten.no/rest/b2b/voyages",
-    # "da-DK": "https://www.hurtigruten.dk/rest/b2b/voyages",
-    # "fr-FR": "https://www.hurtigruten.fr/rest/b2b/voyages",
+    "sv-SE": "https://www.hurtigrutenresan.se/rest/b2b/voyages",
+    "nb-NO": "https://www.hurtigruten.no/rest/b2b/voyages",
+    "da-DK": "https://www.hurtigruten.dk/rest/b2b/voyages",
+    "fr-FR": "https://www.hurtigruten.fr/rest/b2b/voyages",
 }
 
 
@@ -73,33 +84,36 @@ def prepare_environment(market):
         % (", ".join([key for key, value in api_urls.items()]))
     )
 
-    voyage_ids = []
-    epi_voyage_ids = []
-    for key, value in api_urls.items():
-        # you can just do one for loop here and append to two separate lists in the same for loop
-        # instead of looping the entire entries twice over.
-        voyage_ids += [
-            voyage["id"]
-            for voyage in helpers.read_json_data(value)
-            # commmenting this line means all entries in EPI will be migrated
-            # if helpers.skip_entry_if_not_updated(voyage, key, voyage["id"])
-            if voyage["brandingType"] == "expedition"
-        ]
-        # epi_voyage_ids += [voyage["id"] for voyage in helpers.read_json_data(value)]
+    logging.info('getting cf ids')
+    
+    cf_ids_raw = contentful_environment.content_types().find('voyage').entries().all({"limit": 1000, "select": "sys.id"})
+    voyage_ids = [e.id for e in cf_ids_raw if e.id.isnumeric()]
 
-    # Create distinct list
-    voyage_ids = set(voyage_ids)
+    # voyage_ids = []
+    # epi_voyage_ids = []
+    # for key, value in api_urls.items():
+    #     # you can just do one for loop here and append to two separate lists in the same for loop
+    #     # instead of looping the entire entries twice over.
+    #     voyage_ids += [
+    #         voyage["id"]
+    #         for voyage in helpers.read_json_data(value)
+    #         # commmenting this line means all entries in EPI will be migrated
+    #         # if helpers.skip_entry_if_not_updated(voyage, key, voyage["id"])
+    #         if voyage["brandingType"] == "expedition"
+    #     ]
+    #     # epi_voyage_ids += [voyage["id"] for voyage in helpers.read_json_data(value)]
+
+    # # Create distinct list
+    # voyage_ids = set(voyage_ids)
     # epi_voyage_ids = set(epi_voyage_ids)
 
     # logging.info("Number of voyages in EPI: %s" % len(epi_voyage_ids))
-    logging.info("")
-    logging.info("Number of voyages changed: %s" % len(voyage_ids))
-    logging.info("-----------------------------------------------------")
-    logging.info("Voyage IDs to migrate: ")
-    for voyage_id in voyage_ids:
-        logging.info(voyage_id)
-    logging.info("-----------------------------------------------------")
-    logging.info("")
+    
+    # logging.info("Voyage IDs to migrate: ")
+    # for voyage_id in voyage_ids:
+    #     logging.info(voyage_id)
+    # logging.info("-----------------------------------------------------")
+    # logging.info("")
 
     return voyage_ids, contentful_environment
 
@@ -120,6 +134,7 @@ def update_voyage(contentful_environment, voyage_id, market):
 
     voyage_detail_by_locale = {}
     update_api_urls = get_api_urls(None)
+    # print(update_api_urls)
 
     # {"uk": "uk json content for voyage with id: voyage_id", "au": "au json content for au voyage with id: voyage_id"}
 
@@ -134,142 +149,69 @@ def update_voyage(contentful_environment, voyage_id, market):
         default_voyage_detail = voyage_detail_by_locale.get(config.DEFAULT_LOCALE)
     else:
         default_voyage_detail = list(voyage_detail_by_locale.values())[0]
-    # default_voyage_detail = voyage_detail_by_locale['de-CH']
+    default_locale = 'en'
+    if not default_voyage_detail:
+        default_locale = (voyage_detail_by_locale.keys())[0]
+        default_voyage_detail = list(voyage_detail_by_locale.values())[0]
 
     if default_voyage_detail is None:
         logging.info(
             "Could not find default voyage detail for voyage ID: %s" % voyage_id
         )
         return
-    # Assuming that number of selling points is the same for every locale
-    # Check if there's available usps for a given locale, and filter out locales which don't have any usps
-    # voyage_detail_by_locale_usps = {}
-    # usps_list = []
-    # for locale, locale_voyage_detail in voyage_detail_by_locale.items():
-    #     # if not locale_voyage_detail['sellingPoints']:
-    #     if (
-    #         locale_voyage_detail["sellingPoints"] is None
-    #         or locale_voyage_detail["sellingPoints"] == []
-    #     ):
-    #         logging.warning("USPs is not available in %s for %s" % (locale, voyage_id))
-    #     else:
-    #         # ins't this just a copy of voyage_detail_by_locale dict?
-    #         voyage_detail_by_locale_usps[locale] = locale_voyage_detail
-    #         usps_list = locale_voyage_detail["sellingPoints"]
 
-    map_link = (
-        (
-            helpers.add_or_reuse_asset(
-                environment=contentful_environment,
-                asset_uri=default_voyage_detail["largeMap"]["highResolutionUri"],
-                id=default_voyage_detail["largeMap"]["id"].replace(":", "-"),
-                title=default_voyage_detail["largeMap"]["alternateText"],
-                file_name=default_voyage_detail["largeMap"]["alternateText"],
-            )
-        )
-        if default_voyage_detail["largeMap"] is not None
-        else None
-    )
+    map_wrappers = {}
+    map_assets = {}
     
-    map_localized_fields = [
-        helpers.field_localizer(
-            locale,
-            {
-                "caption": voyage_detail["heading"],
-                # "internalName": voyage_detail["heading"],
-                # "image": map_link,
-                "additionalMetadata": voyage_detail["heading"],
-            },
-            market,
-        )
-        for locale, voyage_detail in voyage_detail_by_locale.items()
-    ]
-    map_localized_fields.append(
-        helpers.field_localizer(
-            config.DEFAULT_LOCALE,
-            {
-                "internalName": default_voyage_detail["heading"],
-                "image": map_link,
-            },
-            None,
-        )
-    )
+    asset_ = helpers.add_asset(
+                        environment=contentful_environment,
+                        asset_uri=default_voyage_detail["largeMap"]["highResolutionUri"],
+                        id=default_voyage_detail["largeMap"]["id"].replace(":", "-") + '-' + locale.replace('-', '').lower(),
+                        title=default_voyage_detail["largeMap"]["alternateText"],
+                        file_name=default_voyage_detail["largeMap"]["alternateText"],
+                    ) if "largeMap" in default_voyage_detail and "highResolutionUri" in (default_voyage_detail["largeMap"] or {}) else None
+    
+    if (asset_):
+        map_assets[default_locale] = asset_
+    
+    try:
+        for locale, voyage in voyage_detail_by_locale.items():
+            if voyage is None:
+                logging.info('Voyage not available for locale %s' % locale)
+                continue
+            if "largeMap" in voyage and "highResolutionUri" in (voyage["largeMap"] or {}):
+                asset_uri = voyage["largeMap"]["highResolutionUri"]
+                if (locale != 'en' and map_assets.get("en") is not None and asset_uri == (default_voyage_detail["largeMap"] or {}).get("highResolutionUri")):
+                    asset = map_assets["en"]
+                else:
+                    asset = helpers.add_asset(
+                        environment=contentful_environment,
+                        asset_uri=voyage["largeMap"]["highResolutionUri"],
+                        id=voyage["largeMap"]["id"].replace(":", "-") + '-' + locale.replace('-', '').lower(),
+                        title=voyage["largeMap"]["alternateText"],
+                        file_name=voyage["largeMap"]["alternateText"],
+                    )
+                    map_assets[locale] = asset
+                
+                if asset is None:
+                    continue
+                logging.info('adding map iwrapper')
+                wrapper = helpers.add_entry(
+                    environment=contentful_environment,
+                    id=(default_voyage_detail["largeMap"] or voyage["largeMap"])["id"].replace(":", "-") + '-' + locale.replace('-', '').lower(),
+                    content_type_id="imageWrapper",
+                    market=market or None,
+                    fields={
+                            "internalName": { "en": (default_voyage_detail.get("largeMap", {}) or {}).get("alternateText") or default_voyage_detail["heading"] },
+                            "caption": { locale: voyage["heading"] },
+                            "image": { "en": asset }
+                        },
+                )
+                
+                map_wrappers[locale] = wrapper
+    except:
+        PrintException()
 
-    map_wrapper_link = (
-        helpers.add_entry(
-            environment=contentful_environment,
-            id=default_voyage_detail["largeMap"]["id"].replace(":", "-"),
-            content_type_id="imageWrapper",
-            market=market or None,
-            fields=helpers.merge_localized_dictionaries(*map_localized_fields),
-        )
-        if (default_voyage_detail["largeMap"] is not None and map_link is not None)
-        else None
-    )
-
-    # usps = [
-    #     helpers.add_entry(
-    #         environment=contentful_environment,
-    #         id="usp%s-%d" % (voyage_id, i),
-    #         content_type_id="usp",
-    #         market=market or None,
-    #         # {"en_uk": [usp_content], "apac": "usp_content"}
-    #         fields=helpers.merge_localized_dictionaries(
-    #             *(
-    #                 helpers.field_localizer(
-    #                     locale,
-    #                     {"text": locale_voyage_detail["sellingPoints"][i]},
-    #                     market,
-    #                 )
-    #                 for locale, locale_voyage_detail in voyage_detail_by_locale_usps.items()
-    #             )
-    #         ),
-    #     )
-    #     for i, usp in enumerate(usps_list)
-    # ]
-
-    # Assuming that media is same for every locale
-    # THIS IS IMAGE FIELD IN VOYAGE CT OF GLOBAL
-    # media = [
-    #     helpers.add_or_reuse_asset(
-    #         environment=contentful_environment,
-    #         asset_uri=media_item["highResolutionUri"],
-    #         id=media_item["id"],
-    #         title=media_item["alternateText"],
-    #     )
-    #     for i, media_item in enumerate(default_voyage_detail["mediaContent"])
-    # ]
-
-    # for locale, entry in voyage_detail_by_locale.items():
-    #     entry["mediaContent"]["alternateText"]
-
-    # image_gallery_id = ""
-    # image_wrapper_links = []
-    # for i, media_item in enumerate(default_voyage_detail["mediaContent"]):
-    #     media_link = helpers.add_or_reuse_asset(
-    #         environment=contentful_environment,
-    #         asset_uri=media_item["highResolutionUri"],
-    #         id=media_item["id"],
-    #         title=media_item["alternateText"],
-    #     )
-    #     image_gallery_id += media_item["id"]
-
-    #     image_wrapper_link = helpers.add_entry(
-    #         environment=contentful_environment,
-    #         id=media_item["id"],
-    #         content_type_id="imageWrapper",
-    #         market=market or None,
-    #         fields=helpers.field_localizer(
-    #                     config.DEFAULT_LOCALE,
-    #                     {
-    #                         # "internalName": media_item["alternateText"],
-    #                         "image": media_link,
-    #                         # "additionalMetadata": media_item["alternateText"],
-    #                     },
-    #                     None,
-    #                 )
-    #             ),
-    #     image_wrapper_links.append(image_wrapper_link)
 
     image_gallery_id = ""
     image_wrapper_links = []
@@ -281,7 +223,7 @@ def update_voyage(contentful_environment, voyage_id, market):
             title=media_item["alternateText"],
         )
         image_gallery_id += media_item["id"]
-        
+
         localized_image_wrapper_fields = [
             helpers.field_localizer(
                 locale,
@@ -292,11 +234,11 @@ def update_voyage(contentful_environment, voyage_id, market):
                     "additionalMetadata": media_item["alternateText"],
                 },
                 None,
-            ) for locale, voyage_detail in voyage_detail_by_locale.items()
+            ) for locale, voyage_detail in voyage_detail_by_locale.items() if len(voyage_detail["mediaContent"]) > i
         ]
         localized_image_wrapper_fields.append(
-             helpers.field_localizer(
-                locale,
+            helpers.field_localizer(
+                config.DEFAULT_LOCALE,
                 {
                     "internalName": media_item["alternateText"] or '',
                     "image": media_link,
@@ -348,7 +290,7 @@ def update_voyage(contentful_environment, voyage_id, market):
             logging.warning(
                 "Itinerary is not available in %s for %s" % (locale, voyage_id)
             )
-        if len(locale_voyage_detail["itinerary"]) > length_of_list:
+        if len(locale_voyage_detail["itinerary"]) != length_of_list:
             logging.error(
                 "Itinerary has to many itineraries. Rerun migration for %s" % locale
             )
@@ -401,33 +343,13 @@ def update_voyage(contentful_environment, voyage_id, market):
             helpers.field_localizer(
                 locale,
                 {
-                    # "internalName": default_voyage_detail["itinerary"][i][
-                    #     "heading"
-                    # ] or default_voyage_detail["itinerary"][i]["day"],
+           
                     "day": locale_voyage_detail["itinerary"][i]["day"],
                     "title": locale_voyage_detail["itinerary"][i]["heading"] or default_voyage_detail["itinerary"][i]["day"],
                     "longDescription": helpers.convert_to_contentful_rich_text(
                         locale_voyage_detail["itinerary"][i]["body"]
                     ),
-                    # "highlightedImage": all_itinerary_day_images[i],
-                    # "map": "PLACEHOLDER",
-                    # "port": helpers.add_entry(
-                    #     environment=contentful_environment,
-                    #     id="port-%s-%d"
-                    #     % (
-                    #         default_voyage_detail["itinerary"][i]["location"],
-                    #         i,
-                    #     ),
-                    #     content_type_id="port",
-                    #     market=market or None,
-                    #     # fields=
-                    # ),
-                    # "availableExcursions": [eid for eid in [
-                    #     helpers.entry_link(excursion_id)
-                    #     for excursion_id in locale_voyage_detail["itinerary"][
-                    #         i
-                    #     ]["includedExcursions"] if excursion_id
-                    # ] if eid],
+          
                 },
                 market,
             )
@@ -470,8 +392,8 @@ def update_voyage(contentful_environment, voyage_id, market):
         [helpers.entry_link(destination_cfid)] if destination_cfid is not None else []
     )
     
-    excursions_url = "https://www.hurtigruten.ch/rest/excursion/voyages/" + str(voyage_id) + "/excursions"
-    programs_url = "https://www.hurtigruten.ch/rest/program/voyages/" + str(voyage_id) + "/excursions"
+    excursions_url = "https://www.hurtigruten.com/rest/excursion/voyages/" + str(voyage_id) + "/excursions"
+    programs_url = "https://www.hurtigruten.com/rest/program/voyages/" + str(voyage_id) + "/excursions"
     
     excursions = helpers.read_json_data(excursions_url)
     programs = helpers.read_json_data(programs_url)
@@ -491,18 +413,22 @@ def update_voyage(contentful_environment, voyage_id, market):
         return ''
 
     def extract_slug(url):
+        if not url:
+            return None
         try:    
              return  [p for p in url.split("/") if p][-1]
         except:
             return None
+        
+    
     
     voyage_localized_fields = [
         helpers.field_localizer(
             locale,
             {
+                "map": map_wrappers.get(locale),
                 "isAttemptVoyage": voyage_detail['isAttemptVoyage'],
                 "attemptText": helpers.convert_to_contentful_rich_text(voyage_detail['attemptText']),
-                # "internalName": ",".join(all_booking_codes) + ' - ' + default_voyage_detail["heading"],
                 "name": voyage_detail["heading"],
                 "title": voyage_detail["heading"].split('-')[0],
                 "subtitle": get_subtitle(voyage_detail["heading"]),
@@ -520,31 +446,38 @@ def update_voyage(contentful_environment, voyage_id, market):
                 "notIncluded": helpers.convert_to_contentful_rich_text(
                     voyage_detail["notIncludedInfo"]
                 ),
-                # "destination": destination_links,
                 "usPs": [
                     usp[:255]
                     for usp in remove_nones_from_list(
                         voyage_detail["sellingPoints"]
                     )
                 ],
-                "bookable": voyage_detail["isBookable"],
-                # # "includedFeatures": skip,
-                # # "teamInformation": skip,
-                # # "practicalInformation": skip,  
+                "bookable": voyage_detail["isBookable"], 
             },
             market,
         )
         for locale, voyage_detail in voyage_detail_by_locale.items() if not voyage_detail["isFallbackContent"]
     ]
     
+    # Some fields should be migrated regardless of fallback. For now, just booking codes
+    fallback_count = 0
+    for idx, (locale, voyage_detail) in enumerate(voyage_detail_by_locale.items()):
+        if (voyage_detail["isFallbackContent"]):
+            voyage_localized_fields.append({"bookingCode": { locale: voyage_detail["travelSuggestionCodes"] }})
+            fallback_count += 1
+        else:
+            voyage_localized_fields[idx - fallback_count]["bookingCode"] = { locale: voyage_detail["travelSuggestionCodes"] }
+        
+    
+    
     voyage_localized_fields.append(
         helpers.field_localizer(
             config.DEFAULT_LOCALE,
             {
+                "internalName": ",".join(all_booking_codes) + ' - ' + default_voyage_detail["heading"],
                 "highlightedImage": image_wrapper_links[-1],
-                "map": map_wrapper_link,
                 "itinerary": itinerary,
-                    "ships": helpers.get_cf_ship_link_from_ship_code(contentful_environment,
+                "ships": helpers.get_cf_ship_link_from_ship_code(contentful_environment,
                     default_voyage_detail["shipCodes"]
                 ),
                 "destination": destination_links,
@@ -557,12 +490,19 @@ def update_voyage(contentful_environment, voyage_id, market):
         )
     )
     
+    merged_fields = helpers.merge_localized_dictionaries(*voyage_localized_fields)
+    # Update bookable separately, it's exempt from fallback rules
+    for locale, voyage_detail in voyage_detail_by_locale.items():
+        if not "bookable" in merged_fields:
+            merged_fields["bookable"] = {}
+        merged_fields["bookable"] = {**merged_fields["bookable"], **{ locale: voyage_detail["isBookable"] }}
+    
     helpers.add_entry(
         environment=contentful_environment,
         id=str(voyage_id),
         content_type_id="voyage",
         market=market or None,
-        fields=helpers.merge_localized_dictionaries(*voyage_localized_fields),
+        fields=merged_fields,
     )
 
     for locale, url in update_api_urls.items():
@@ -571,51 +511,13 @@ def update_voyage(contentful_environment, voyage_id, market):
     logging.info("Voyage migration finished with ID: %s" % voyage_id)
 
 
-def find_missing(contentful_environment):
-    entries = helpers.get_all_entries_for_content_type(
-        contentful_environment, "voyage", 40, 120
-    )
-
-    for entry in entries:
-        missingDestination = False
-        missingMap = False
-        missingItineraryImage = False
-
-        try:
-            if entry.fields("en")["map"] is None:
-                missingMap = True
-
-            if entry.fields("en")["destination"] is None:
-                missingDestination = True
-
-            itrDays = [
-                helpers.get_entry(contentful_environment, itr.id)
-                for itr in entry.fields("en")["itinerary"]
-            ]
-            for itrDay in itrDays:
-                if itrDay.fields("en")["highlighted_image"] is None:
-                    missingItineraryImage = True
-        except:
-            logging.info("Entry error: %s" % entry.id)
-
-        if missingDestination or missingMap or missingItineraryImage:
-            logging.info("Entry: %s has missing items" % entry.id)
-        else:
-            logging.info("Entry: %s is complete" % entry.id)
-        if missingDestination:
-            logging.info("Missing: Destination")
-        if missingMap:
-            logging.info("Missing: Map")
-        if missingItineraryImage:
-            logging.info("Missing: Itinerary Day Image")
-    return
 
 
 def run_sync(**kwargs):
     parameter_voyage_ids = kwargs.get("content_ids")
     include = kwargs.get("include")
     market = kwargs.get("market")
-    # market = 'gsw-CH'
+
     if parameter_voyage_ids is not None:
         if include:
             logging.info(
@@ -633,9 +535,11 @@ def run_sync(**kwargs):
         logging.info("Running voyages sync")
 
     voyage_ids, contentful_environment = prepare_environment(None)
-    # fetch ids that already exist, exclude them from voyage_ids
-    # only run script for voyages that don't yet exist
-    # voyage_ids = parameter_voyage_ids
+    
+    logging.info("")
+    logging.info("Number of voyages to update: %s" % len(voyage_ids))
+    logging.info("-----------------------------------------------------")
+
     total_voyages = len(voyage_ids)
     
     for idx, voyage_id in enumerate(voyage_ids):
@@ -647,17 +551,16 @@ def run_sync(**kwargs):
             if not include and voyage_id in parameter_voyage_ids:
                 continue
         try:
+            logging.info('yay')
             update_voyage(contentful_environment, voyage_id, market)
         except Exception as e:
+            PrintException()
             logging.info(f"Error is {e}")
             logging.error(
                 "Voyage migration error with ID: %s, error: %s" % (voyage_id, e)
             )
             logging.info("Entry %s/%s" % (idx, len(voyage_ids)))
-            # [
-            #     helpers.remove_entry_id_from_memory(voyage_id, locale)
-            #     for locale, url in CMS_API_URLS.items()
-            # ]
+           
         logging.info("-----------------------------------------------------")
         logging.info(f"Completed {idx+1}/{total_voyages} Voyages.")
         logging.info("-----------------------------------------------------")
@@ -684,7 +587,3 @@ if __name__ == "__main__":
     ids = vars(args)["content_ids"]
     include = vars(args)["include"]
     run_sync(**{"content_ids": ids, "include": include})
-
-
-# 89712,91222,92739,92576,92680,90327,92558,89785,90138,87353,92591,92192,90155,90363,90277,92832,92286,90078,92309,89739,91020
-# failed 92576,92558,90155,92309,89739
