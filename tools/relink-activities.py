@@ -99,11 +99,11 @@ for activity_id, voyage_ids in voyages_for_activity.items():
         voyage._fields['en'][entry_type + 's'] = new_activities
         voyage.save()
 
-        # if (was_published):
-        #     try:
-        #         voyage.publish()
-        #     except:
-        #         print('Unable to publish voyage %s' % voyage_id)
+        if (was_published):
+            try:
+                voyage.publish()
+            except:
+                print('Unable to publish voyage %s' % voyage_id)
 
     print('Updated activity %s. Affected voyages: %s' %
           (activity_id, ', '.join(voyage_ids)))
